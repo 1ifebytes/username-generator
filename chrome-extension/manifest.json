@@ -4,7 +4,12 @@
   "version": "1.0",
   "description": "Generate custom usernames with various options",
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
   },
   "permissions": [
     "clipboardWrite"

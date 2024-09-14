@@ -35,28 +35,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     (options.symbols ? symbols : '');
                 } else if (options.easyToSay) {
                     const vowels = 'aeiou';
-                    const easyConsonants = 'bcdfghjklmnprstvwyz'; // 移除了一些难发音的辅音
-                    const syllables = [
-                        'CV', 'CVC', 'VC', 'CCV', 'CCVC', 'CVCC' // C: 辅音, V: 元音
-                    ];
-                    
-                    let username = '';
-                    while (username.length < options.length) {
-                        let syllable = syllables[Math.floor(Math.random() * syllables.length)];
-                        for (let char of syllable) {
-                            if (username.length >= options.length) break;
-                            if (char === 'C') {
-                                let consonant = easyConsonants.charAt(Math.floor(Math.random() * easyConsonants.length));
-                                username += options.uppercase ? consonant.toUpperCase() : consonant;
-                            } else {
-                                let vowel = vowels.charAt(Math.floor(Math.random() * vowels.length));
-                                username += options.uppercase ? vowel.toUpperCase() : vowel;
-                            }
-                        }
+        const easyConsonants = 'bcdfghjklmnprstvwyz';
+        const syllables = ['CV', 'CVC', 'VC'];
+        
+        let username = '';
+        let lastCharWasConsonant = false;
+    
+        while (username.length < options.length) {
+            let syllable = syllables[Math.floor(Math.random() * syllables.length)];
+            
+            for (let char of syllable) {
+                if (username.length >= options.length) break;
+                
+                if (char === 'C') {
+                    if (lastCharWasConsonant && Math.random() < 0.7) {
+                        char = 'V';
+                    } else {
+                        lastCharWasConsonant = true;
                     }
-                    
-                    // 如果生成的用户名超过了指定长度,截断它
-                    return username.slice(0, options.length);
+                } else {
+                    lastCharWasConsonant = false;
+                }
+    
+                let letter;
+                if (char === 'C') {
+                    letter = easyConsonants.charAt(Math.floor(Math.random() * easyConsonants.length));
+                } else {
+                    letter = vowels.charAt(Math.floor(Math.random() * vowels.length));
+                }
+    
+                username += options.uppercase ? letter.toUpperCase() : letter;
+            }
+    
+            if (username.length > 1 && Math.random() < 0.3) {
+                username += '';
+            }
+        }
+    
+        return username.slice(0, options.length);
                 } else if (options.easyToRead) {
             chars = (options.lowercase ? lowercase : '') +
                     (options.uppercase ? uppercase : '') +
@@ -96,11 +112,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const options = getOptions();
         const username = generateUsername(options);
         generatedUsername.textContent = username;
+
+        // 清除复制成功的提示信息
+        const copySuccess = document.getElementById('copy-success');
+        copySuccess.style.display = 'none';
     }
 
     function copyUsername() {
         navigator.clipboard.writeText(generatedUsername.textContent).then(() => {
-            alert('Username copied to clipboard!');
+            // 显示提示信息
+            const copySuccess = document.getElementById('copy-success');
+            copySuccess.style.display = 'block';
+            copySuccess.style.color = 'red'; // 将提示信息改为红色
+            // 设置3秒后隐藏提示信息
+            setTimeout(() => {
+                copySuccess.style.display = 'none';
+            }, 5000);
         });
     }
 
