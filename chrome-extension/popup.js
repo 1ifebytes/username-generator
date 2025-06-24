@@ -178,11 +178,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // 显示提示信息
             const copySuccess = document.getElementById('copy-success');
             copySuccess.style.display = 'block';
-            copySuccess.style.color = 'red'; // 将提示信息改为红色
             // 设置3秒后隐藏提示信息
             setTimeout(() => {
                 copySuccess.style.display = 'none';
-            }, 5000);
+            }, 3000);
         });
     }
 
