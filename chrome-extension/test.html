@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Username Generator Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            border: 1px solid #ccc; 
+            padding: 15px; 
+            border-radius: 8px;
+        }
+        .result { 
+            background: #f0f0f0; 
+            padding: 8px; 
+            margin: 5px 0; 
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        button {
+            background: #1e90ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4169e1;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Username Generator Algorithm Test</h1>
+    
+    <div class="test-section">
+        <h2>Easy to Say Test</h2>
+        <div class="controls">
+            <button onclick="testEasyToSay()">Generate 10 Easy-to-Say Usernames</button>
+        </div>
+        <div id="easy-to-say-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Easy to Read Test</h2>
+        <div class="controls">
+            <button onclick="testEasyToRead()">Generate 10 Easy-to-Read Usernames</button>
+        </div>
+        <div id="easy-to-read-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>All Characters Test</h2>
+        <div class="controls">
+            <button onclick="testAllCharacters()">Generate 10 All-Characters Usernames</button>
+        </div>
+        <div id="all-characters-results"></div>
+    </div>
+
+    <script>
+        // Copy the optimized username generation functions
+        function generateUsername(options) {
+            const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+            const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            const symbols = '!@#$%^&*()';
+
+            // Helper function to build character set
+            function buildCharSet(includeLower, includeUpper, includeNumbers, includeSymbols) {
+                return [
+                    includeLower ? lowercase : '',
+                    includeUpper ? uppercase : '',
+                    includeNumbers ? numbers : '',
+                    includeSymbols ? symbols : ''
+                ].join('');
+            }
+
+            // Helper function to apply case transformation
+            function applyCase(char, options) {
+                if (options.uppercase && options.lowercase) {
+                    return Math.random() < 0.5 ? char.toUpperCase() : char.toLowerCase();
+                }
+                return options.uppercase ? char.toUpperCase() : char.toLowerCase();
+            }
+
+            // Helper function for efficient random selection
+            function getRandomChar(chars) {
+                return chars[Math.floor(Math.random() * chars.length)];
+            }
+
+            if (options.easyToSay) {
+                return generateEasyToSayUsername(options, numbers, symbols, applyCase, getRandomChar);
+            } else if (options.easyToRead) {
+                return generateEasyToReadUsername(options, buildCharSet, getRandomChar);
+            } else {
+                return generateAllCharactersUsername(options, buildCharSet, getRandomChar);
+            }
+        }
+
+        function generateEasyToSayUsername(options, numbers, symbols, applyCase, getRandomChar) {
+            const vowels = 'aeiou';
+            const consonants = 'bcdfghjklmnprstvwyz';
+            
+            // More natural syllable patterns
+            const syllablePatterns = [
+                'CV', 'CVC', 'VC', 'V',    // Basic patterns
+                'CCV', 'CVV', 'VCC',       // Extended patterns for variety
+            ];
+
+            // Calculate suffix length more intelligently
+            const suffixChars = buildSuffixChars(options, numbers, symbols);
+            const maxSuffixLength = Math.min(2, Math.floor(options.length * 0.3));
+            const suffixLength = suffixChars.length > 0 ? 
+                Math.min(maxSuffixLength, Math.max(0, options.length - 3)) : 0;
+            
+            const letterLength = options.length - suffixLength;
+            let result = '';
+
+            // Generate pronounceable part
+            while (result.length < letterLength) {
+                const pattern = getRandomChar(syllablePatterns);
+                const syllable = generateSyllable(pattern, vowels, consonants, applyCase, options, getRandomChar);
+                
+                // Add syllable but don't exceed target length
+                const remaining = letterLength - result.length;
+                result += syllable.slice(0, remaining);
+            }
+
+            // Add suffix
+            for (let i = 0; i < suffixLength; i++) {
+                result += getRandomChar(suffixChars);
+            }
+
+            return result.slice(0, options.length);
+        }
+
+        function generateSyllable(pattern, vowels, consonants, applyCase, options, getRandomChar) {
+            let syllable = '';
+            let lastWasConsonant = false;
+
+            for (const charType of pattern) {
+                let char;
+                if (charType === 'C') {
+                    // Avoid double consonants for better pronunciation
+                    if (lastWasConsonant && Math.random() < 0.6) {
+                        char = getRandomChar(vowels);
+                        lastWasConsonant = false;
+                    } else {
+                        char = getRandomChar(consonants);
+                        lastWasConsonant = true;
+                    }
+                } else { // Vowel
+                    char = getRandomChar(vowels);
+                    lastWasConsonant = false;
+                }
+                syllable += applyCase(char, options);
+            }
+            return syllable;
+        }
+
+        function buildSuffixChars(options, numbers, symbols) {
+            return (options.numbers ? numbers : '') + (options.symbols ? symbols : '');
+        }
+
+        function generateEasyToReadUsername(options, buildCharSet, getRandomChar) {
+            let chars = buildCharSet(options.lowercase, options.uppercase, options.numbers, options.symbols);
+            
+            // Remove ambiguous characters more efficiently
+            chars = chars.replace(/[Il1O0]/g, '');
+            
+            if (!chars) return '';
+
+            // Use Fisher-Yates inspired approach for better distribution
+            const charArray = chars.split('');
+            let result = '';
+            
+            for (let i = 0; i < options.length; i++) {
+                // Filter out the last character to avoid consecutive duplicates
+                const availableChars = i === 0 ? charArray : 
+                    charArray.filter(c => c.toLowerCase() !== result[i-1].toLowerCase());
+                
+                if (availableChars.length === 0) {
+                    // Fallback if no valid characters available
+                    result += getRandomChar(charArray);
+                } else {
+                    result += getRandomChar(availableChars);
+                }
+            }
+            
+            return result;
+        }
+
+        function generateAllCharactersUsername(options, buildCharSet, getRandomChar) {
+            const chars = buildCharSet(options.lowercase, options.uppercase, options.numbers, options.symbols);
+            
+            if (!chars) return '';
+
+            // Use array for better performance with large lengths
+            const result = new Array(options.length);
+            for (let i = 0; i < options.length; i++) {
+                result[i] = getRandomChar(chars);
+            }
+            
+            return result.join('');
+        }
+
+        // Test functions
+        function testEasyToSay() {
+            const options = {
+                length: 8,
+                easyToSay: true,
+                easyToRead: false,
+                allCharacters: false,
+                lowercase: true,
+                uppercase: false,
+                numbers: true,
+                symbols: false
+            };
+            
+            const results = document.getElementById('easy-to-say-results');
+            results.innerHTML = '';
+            
+            try {
+                for (let i = 0; i < 10; i++) {
+                    const username = generateUsername(options);
+                    const div = document.createElement('div');
+                    div.className = 'result';
+                    div.textContent = `${i+1}: ${username} (length: ${username.length})`;
+                    results.appendChild(div);
+                }
+            } catch (error) {
+                const div = document.createElement('div');
+                div.className = 'result error';
+                div.textContent = `Error: ${error.message}`;
+                results.appendChild(div);
+            }
+        }
+
+        function testEasyToRead() {
+            const options = {
+                length: 10,
+                easyToSay: false,
+                easyToRead: true,
+                allCharacters: false,
+                lowercase: true,
+                uppercase: true,
+                numbers: true,
+                symbols: false
+            };
+            
+            const results = document.getElementById('easy-to-read-results');
+            results.innerHTML = '';
+            
+            try {
+                for (let i = 0; i < 10; i++) {
+                    const username = generateUsername(options);
+                    const div = document.createElement('div');
+                    div.className = 'result';
+                    div.textContent = `${i+1}: ${username} (length: ${username.length})`;
+                    results.appendChild(div);
+                }
+            } catch (error) {
+                const div = document.createElement('div');
+                div.className = 'result error';
+                div.textContent = `Error: ${error.message}`;
+                results.appendChild(div);
+            }
+        }
+
+        function testAllCharacters() {
+            const options = {
+                length: 12,
+                easyToSay: false,
+                easyToRead: false,
+                allCharacters: true,
+                lowercase: true,
+                uppercase: true,
+                numbers: true,
+                symbols: true
+            };
+            
+            const results = document.getElementById('all-characters-results');
+            results.innerHTML = '';
+            
+            try {
+                for (let i = 0; i < 10; i++) {
+                    const username = generateUsername(options);
+                    const div = document.createElement('div');
+                    div.className = 'result';
+                    div.textContent = `${i+1}: ${username} (length: ${username.length})`;
+                    results.appendChild(div);
+                }
+            } catch (error) {
+                const div = document.createElement('div');
+                div.className = 'result error';
+                div.textContent = `Error: ${error.message}`;
+                results.appendChild(div);
+            }
+        }
+
+        // Auto-run first test on load
+        window.addEventListener('load', () => {
+            testEasyToSay();
+        });
+    </script>
+</body>
+</html>

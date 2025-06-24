@@ -25,6 +25,10 @@ body {
     font-size: 24px;
     font-weight: bold;
     color: #1e90ff;
+    display: block;
+    width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 h1 {
