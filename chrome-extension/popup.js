@@ -204,4 +204,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Generate initial username
     updateUsername();
+
+    // Handle info icon interactions
+    const infoIcons = document.querySelectorAll('.info-icon');
+    const infoDisplay = document.getElementById('info-display');
+    const infoContent = document.getElementById('info-content');
+    
+    const infoTexts = {
+        'easy-to-say': 'Will avoid numbers and special characters, creating pronounceable syllable-based usernames',
+        'easy-to-read': 'Avoid ambiguous characters like I, l, 1, O, and 0 to prevent confusion',
+        'all-characters': 'Any character combinations like !, 7, h, K, and l1 for maximum variety'
+    };
+    
+    infoIcons.forEach(icon => {
+        icon.addEventListener('mouseenter', () => {
+            const infoType = icon.getAttribute('data-info');
+            if (infoTexts[infoType]) {
+                infoContent.textContent = infoTexts[infoType];
+                infoDisplay.classList.add('active');
+            }
+        });
+        
+        icon.addEventListener('mouseleave', () => {
+            infoContent.textContent = 'Hover over the info icons to see details';
+            infoDisplay.classList.remove('active');
+        });
+    });
 });

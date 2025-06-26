@@ -12,25 +12,33 @@
             <span id="generated-username">c0lISTES</span>
         </div>
         <h1>Customize your username</h1>
-        <div class="options-container">
-            <div class="options-column">
+        
+        <!-- Generation Mode Section -->
+        <div class="generation-mode-section">
+            <h3 class="section-title">Generation Mode</h3>
+            <div class="mode-options">
                 <div class="option">
                     <input type="radio" id="easy-to-say" name="readability" checked>
                     <label for="easy-to-say">Easy to say</label>
-                    <span class="info-icon" title=" Will avoid numbers and special characters">i</span>
+                    <span class="info-icon" data-info="easy-to-say">i</span>
                 </div>
                 <div class="option">
                     <input type="radio" id="easy-to-read" name="readability">
                     <label for="easy-to-read">Easy to read</label>
-                    <span class="info-icon" title="Avoid ambiguous characters like I, l, 1, O, and 0">i</span>
+                    <span class="info-icon" data-info="easy-to-read">i</span>
                 </div>
                 <div class="option">
                     <input type="radio" id="all-characters" name="readability">
                     <label for="all-characters">All characters</label>
-                    <span class="info-icon" title="Any character combinations like !, 7, h, K, and l1">i</span>
+                    <span class="info-icon" data-info="all-characters">i</span>
                 </div>
             </div>
-            <div class="options-column">
+        </div>
+
+        <!-- Character Types Section -->
+        <div class="character-types-section">
+            <h3 class="section-title">Character Types</h3>
+            <div class="character-options">
                 <div class="option">
                     <input type="checkbox" id="uppercase">
                     <label for="uppercase">Uppercase</label>
@@ -48,6 +56,11 @@
                     <label for="symbols">Symbols</label>
                 </div>
             </div>
+        </div>
+
+        <!-- Info Display Area -->
+        <div id="info-display" class="info-display">
+            <div id="info-content">Hover over the info icons to see details</div>
         </div>
         <div class="length-container">
             <label for="length">Username Length:</label>
