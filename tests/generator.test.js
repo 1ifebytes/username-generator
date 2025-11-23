@@ -5,9 +5,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const pageHtml = fs.readFileSync(path.join(__dirname, '..', 'page.html'), 'utf8');
+const pageHtml = fs.readFileSync(path.join(__dirname, '..', 'chrome-extension', 'page.html'), 'utf8');
 
-require('../popup.js');
+require('../chrome-extension/popup.js');
 
 function buildDom() {
     const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);

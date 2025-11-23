@@ -41,7 +41,7 @@ Chrome MV3 extension for generating customizable usernames. Provides UI controls
 - Manifest V3 compliance; request only necessary permissions
 - Sanitize and validate user-facing text; avoid injection risks
 - Keep behavior in DOMContentLoaded scope for popup/page scripts
- - Package command: `zip -r dist/usernameGenerator.zip manifest.json page.html popup.css popup.js background.js icon.png`（如有新增资源请追加）
+ - Package command: `zip -r dist/usernameGenerator.zip chrome-extension/manifest.json chrome-extension/page.html chrome-extension/popup.css chrome-extension/popup.js chrome-extension/background.js chrome-extension/icon.png`（如有新增资源请追加）
 
 ## External Dependencies
 - Chrome extension runtime (Manifest V3)
