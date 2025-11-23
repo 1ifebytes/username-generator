@@ -2,60 +2,18 @@
  * @jest-environment jsdom
  */
 
+const fs = require('fs');
+const path = require('path');
+
+const pageHtml = fs.readFileSync(path.join(__dirname, '..', 'page.html'), 'utf8');
+
 require('../popup.js');
 
 function buildDom() {
-    document.body.innerHTML = `
-        <div class="container">
-            <div class="username-display">
-                <span id="generated-username"></span>
-            </div>
-            <h1>Customize your username</h1>
-            <div class="options-container">
-                <div class="options-column">
-                    <div class="option">
-                        <input type="radio" id="easy-to-say" name="readability" checked>
-                        <label for="easy-to-say">Easy to say</label>
-                    </div>
-                    <div class="option">
-                        <input type="radio" id="easy-to-read" name="readability">
-                        <label for="easy-to-read">Easy to read</label>
-                    </div>
-                    <div class="option">
-                        <input type="radio" id="all-characters" name="readability">
-                        <label for="all-characters">All characters</label>
-                    </div>
-                </div>
-                <div class="options-column">
-                    <div class="option">
-                        <input type="checkbox" id="uppercase">
-                        <label for="uppercase">Uppercase</label>
-                    </div>
-                    <div class="option">
-                        <input type="checkbox" id="lowercase" checked>
-                        <label for="lowercase">Lowercase</label>
-                    </div>
-                    <div class="option">
-                        <input type="checkbox" id="numbers">
-                        <label for="numbers">Numbers</label>
-                    </div>
-                    <div class="option">
-                        <input type="checkbox" id="symbols">
-                        <label for="symbols">Symbols</label>
-                    </div>
-                </div>
-            </div>
-            <div class="length-container">
-                <label for="length">Username Length:</label>
-                <input type="number" id="length" min="3" max="30" value="8">
-                <input type="range" id="length-slider" min="3" max="30" value="8">
-            </div>
-            <div class="button-container">
-                <button id="generate-username">Generate Username</button>
-                <button id="copy-username">Copy Username</button>
-            </div>
-        </div>
-    `;
+    const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const content = bodyMatch && bodyMatch[1] ? bodyMatch[1] : '';
+    const stripped = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    document.body.innerHTML = stripped;
 }
 
 function bootstrapPopup() {
@@ -129,5 +87,16 @@ describe('username generator popup', () => {
         expect(username).toMatch(/[A-Z]/);
         expect(username).toMatch(/[3-9]/);
         expect(username).not.toMatch(/[Il1O0S5B8Z2]/);
+    });
+
+    test('page HTML includes required controls', () => {
+        bootstrapPopup();
+
+        expect(document.getElementById('generated-username')).not.toBeNull();
+        expect(document.getElementById('easy-to-say')).not.toBeNull();
+        expect(document.getElementById('easy-to-read')).not.toBeNull();
+        expect(document.getElementById('all-characters')).not.toBeNull();
+        expect(document.getElementById('generate-username')).not.toBeNull();
+        expect(document.getElementById('copy-username')).not.toBeNull();
     });
 });
