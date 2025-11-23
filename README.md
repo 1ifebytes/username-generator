@@ -1,72 +1,86 @@
-# Username Generator Chrome Extension
-# 用户名生成器 Chrome 扩展
-
-[English](#english) | [中文](#中文)
+# Username Generator Chrome Extension  
+English | 中文 | 粵語
 
 ## English
+**Description**  
+Full-page username generator (Manifest V3) for Chrome. Build pronounceable or readable usernames fast, with history and one-click copy.
 
-### Description
-The Username Generator Chrome Extension is a tool that allows users to create customized usernames based on various criteria. It's perfect for quickly generating unique usernames for different platforms or accounts.
+**Features**
+- Customizable length with synced input and slider
+- Modes: Easy to say (consonant/vowel alternating), Easy to read (ambiguous chars removed), All characters
+- Toggles: uppercase, lowercase, numbers, symbols
+- History (local): up to 50 items in `chrome.storage.local`, timestamps (YYYY-MM-DD HH:mm:ss, local), lazy load, click-to-copy, delete single, clear all
+- Opens in a new tab (`chrome-extension/page.html`); clipboard feedback with alerts
 
-### Features
-- Customizable username length
-- Options for easy-to-say and easy-to-read usernames
-- Include or exclude uppercase letters, lowercase letters, numbers, and symbols
-- One-click copy functionality
-- User-friendly interface
+**Installation**
+1. Download/clone the repo.
+2. Chrome → `chrome://extensions/` → enable Developer mode.
+3. Click “Load unpacked” and select the `chrome-extension/` directory.
 
-### Installation
-1. Download or clone this repository.
-2. Open Chrome and navigate to `chrome://extensions/`.
-3. Enable "Developer mode" in the top right corner.
-4. Click "Load unpacked" and select the directory containing the extension files.
+**Usage**
+1. Click the extension icon (opens the full-page UI).  
+2. Pick mode (Easy to say / Easy to read / All characters) and toggles (uppercase/lowercase/numbers/symbols); set length.  
+3. Click “Generate Username”; click “Copy Username” or click a history item to copy.  
+4. Manage history: scroll or “Load more”, delete a single entry, or “Clear all”.
 
-### Usage
-1. Click on the extension icon in your Chrome toolbar.
-2. Adjust the settings according to your preferences:
-   - Choose between "Easy to say", "Easy to read", or "All characters"
-   - Select character types (uppercase, lowercase, numbers, symbols)
-   - Set the desired username length
-3. Click "Generate Username" to create a new username.
-4. Click "Copy Username" to copy the generated username to your clipboard.
+**Contributing**  
+PRs welcome.
 
-### Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### License
-This project is licensed under the MIT License.
-
----
+**License**  
+MIT
 
 ## 中文
+**描述**  
+全页面的 Chrome 用户名生成器（MV3），快速生成易发音或易阅读的用户名，支持历史记录与一键复制。
 
-### 描述
-用户名生成器 Chrome 扩展是一个允许用户基于各种标准创建自定义用户名的工具。它非常适合为不同平台或账户快速生成独特的用户名。
+**功能**
+- 可自定义长度，输入框与滑条同步
+- 模式：易于发音（辅音/元音交替）、易于阅读（移除易混淆字符）、全部字符
+- 选项：可选大写/小写/数字/符号
+- 历史（本地）：`chrome.storage.local` 保存最多 50 条，时间戳 YYYY-MM-DD HH:mm:ss（本地时区），懒加载，点击复制，单条删除与清空
+- 点击扩展图标打开新标签页（`chrome-extension/page.html`），复制有提示
 
-### 功能
-- 可自定义用户名长度
-- 提供易于发音和易于阅读的用户名选项
-- 可包含或排除大写字母、小写字母、数字和符号
-- 一键复制功能
-- 用户友好的界面
+**安装**
+1. 下载/克隆本仓库。
+2. Chrome → `chrome://extensions/` → 打开开发者模式。
+3. 点击“加载已解压的扩展程序”，选择 `chrome-extension/` 目录。
 
-### 安装
-1. 下载或克隆此仓库。
-2. 打开 Chrome 浏览器，导航至 `chrome://extensions/`。
-3. 在右上角启用"开发者模式"。
-4. 点击"加载已解压的扩展程序"，选择包含扩展文件的目录。
+**使用**
+1. 点击扩展图标（打开全页面 UI）。
+2. 选择模式（易于发音/易于阅读/全部字符），勾选字符类型，设置长度。
+3. 点“Generate Username”生成；点“Copy Username”或点击历史项复制。
+4. 历史管理：滚动或“Load more”查看更多，支持单条删除与清空。
 
-### 使用方法
-1. 点击 Chrome 工具栏中的扩展图标。
-2. 根据您的偏好调整设置：
-   - 选择"易于发音"、"易于阅读"或"所有字符"
-   - 选择字符类型（大写、小写、数字、符号）
-   - 设置所需的用户名长度
-3. 点击"生成用户名"创建新的用户名。
-4. 点击"复制用户名"将生成的用户名复制到剪贴板。
+**贡献**  
+欢迎提交 PR。
 
-### 贡献
-欢迎贡献！请随时提交 Pull Request。
+**许可证**  
+MIT
 
-### 许可证
-本项目采用 MIT 许可证。
+## 粵語
+**描述**  
+Chrome 全頁版用戶名產生器（MV3），快速生出易講或易讀嘅用戶名，支援歷史同一鍵複製。
+
+**功能**
+- 自訂長度，輸入框同滑桿同步
+- 模式：易講（子音/母音交替）、易讀（移除易混字符）、全部字符
+- 選項：大細階、數字、符號任揀
+- 歷史（本地）：`chrome.storage.local` 最多 50 條，時間戳 YYYY-MM-DD HH:mm:ss（本地時區），懶加載，點擊可複製，支援刪單條/清空
+- 點擊擴充圖示會開新分頁（`chrome-extension/page.html`），複製有提示
+
+**安裝**
+1. 下載/clone 倉庫。
+2. Chrome → `chrome://extensions/` → 開啟開發者模式。
+3. 撳「Load unpacked」，揀 `chrome-extension/` 目錄。
+
+**使用**
+1. 撳擴充圖示（打開全頁 UI）。
+2. 揀模式（易講/易讀/全部字符），選字符類型，設定長度。
+3. 撳「Generate Username」生成；撳「Copy Username」或點歷史項複製。
+4. 歷史管理：滾動或「Load more」，可刪單條或清空。
+
+**貢獻**  
+歡迎 PR。
+
+**授權**  
+MIT
