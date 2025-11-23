@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Username Generator</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="username-display">
+            <span id="generated-username">c0lISTES</span>
+        </div>
+        <h1>Customize your username</h1>
+        <div class="options-container">
+            <div class="options-column">
+                <div class="option">
+                    <input type="radio" id="easy-to-say" name="readability" checked>
+                    <label for="easy-to-say">Easy to say</label>
+                    <span class="info-icon" title="Avoid numbers and special characters">i</span>
+                </div>
+                <div class="option">
+                    <input type="radio" id="easy-to-read" name="readability">
+                    <label for="easy-to-read">Easy to read</label>
+                    <span class="info-icon" title="Avoid ambiguous characters like I, l, 1, O, and 0">i</span>
+                </div>
+                <div class="option">
+                    <input type="radio" id="all-characters" name="readability">
+                    <label for="all-characters">All characters</label>
+                    <span class="info-icon" title="Any character combinations like !, 7, h, K, and l1">i</span>
+                </div>
+            </div>
+            <div class="options-column">
+                <div class="option">
+                    <input type="checkbox" id="uppercase">
+                    <label for="uppercase">Uppercase</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="lowercase" checked>
+                    <label for="lowercase">Lowercase</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="numbers">
+                    <label for="numbers">Numbers</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="symbols">
+                    <label for="symbols">Symbols</label>
+                </div>
+            </div>
+        </div>
+        <div class="length-container">
+            <label for="length">Username Length:</label>
+            <input type="number" id="length" min="3" max="30" value="8">
+            <input type="range" id="length-slider" min="3" max="30" value="8">
+        </div>
+        <div class="button-container">
+            <button id="generate-username">Generate Username</button>
+            <button id="copy-username">Copy Username</button>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
