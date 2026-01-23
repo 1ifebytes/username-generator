@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const HISTORY_KEY = 'usernameHistory';
     const HISTORY_LIMIT = 50;
     const HISTORY_BATCH_SIZE = 10;
+    const CURRENT_VERSION = 2;
 
     const lengthInput = document.getElementById('length');
     const lengthSlider = document.getElementById('length-slider');
@@ -19,6 +20,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const emptyHistory = document.getElementById('empty-history');
     const clearHistoryButton = document.getElementById('clear-history');
     const loadMoreHistoryButton = document.getElementById('load-more-history');
+    const exportHistoryButton = document.getElementById('export-history');
+    const historySearchInput = document.getElementById('history-search');
+    const clearSearchButton = document.getElementById('clear-search');
+    const themeSelector = document.getElementById('theme-selector');
+    const languageSelector = document.getElementById('language-selector');
+    const favoritesList = document.getElementById('favorites-list');
+    const emptyFavorites = document.getElementById('empty-favorites');
     const easyToSayRadio = document.getElementById('easy-to-say');
     const easyToReadRadio = document.getElementById('easy-to-read');
     const allCharactersRadio = document.getElementById('all-characters');
@@ -30,6 +38,37 @@ document.addEventListener('DOMContentLoaded', function() {
     let visibleHistoryCount = HISTORY_BATCH_SIZE;
 
     const storage = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null;
+
+    function migrateStorage() {
+        if (!storage) return;
+
+        storage.get(['version'], (result) => {
+            if (chrome.runtime && chrome.runtime.lastError) {
+                console.error('Failed to check storage version', chrome.runtime.lastError);
+                return;
+            }
+
+            const version = result.version || 1;
+
+            if (version < 2) {
+                // Migrate to v2: add new storage keys
+                const newSettings = {
+                    version: 2,
+                    themePreference: 'system',
+                    languagePreference: 'en',
+                    usernameFavorites: []
+                };
+
+                storage.set(newSettings, () => {
+                    if (chrome.runtime && chrome.runtime.lastError) {
+                        console.error('Failed to migrate storage to v2', chrome.runtime.lastError);
+                    }
+                });
+            }
+        });
+    }
+
+    migrateStorage();
 
     function clampLength(value) {
         const parsed = parseInt(value, 10);
@@ -187,16 +226,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return usernameChars.join('');
     }
 
-    function formatTimestamp(timestamp) {
+    function formatTimestamp(timestamp, locale = 'en-US') {
         const date = new Date(timestamp);
-        const pad = (num) => String(num).padStart(2, '0');
-        const year = date.getFullYear();
-        const month = pad(date.getMonth() + 1);
-        const day = pad(date.getDate());
-        const hours = pad(date.getHours());
-        const minutes = pad(date.getMinutes());
-        const seconds = pad(date.getSeconds());
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        return date.toLocaleString(locale, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).replace(/\//g, '-');
     }
 
     function upsertHistory(list, entry, limit = HISTORY_LIMIT) {
@@ -217,21 +257,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function renderHistory() {
+    function renderHistory(filteredItems = null) {
         if (!historyList) return;
 
         historyList.innerHTML = '';
-        const visible = history.slice(0, visibleHistoryCount);
+        const itemsToRender = filteredItems || history.slice(0, visibleHistoryCount);
+        const isFiltered = filteredItems !== null;
+        const locale = window.__usernameGeneratorState?.locale || 'en-US';
 
-        if (visible.length === 0) {
+        if (itemsToRender.length === 0) {
             emptyHistory.style.display = 'block';
-            loadMoreHistoryButton.disabled = true;
+            if (loadMoreHistoryButton) loadMoreHistoryButton.disabled = true;
             return;
         }
 
         emptyHistory.style.display = 'none';
 
-        visible.forEach(item => {
+        itemsToRender.forEach(item => {
             const row = document.createElement('div');
             row.className = 'history-item';
             row.setAttribute('data-username', item.username);
@@ -246,10 +288,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const time = document.createElement('div');
             time.className = 'history-timestamp';
-            time.textContent = formatTimestamp(item.timestamp);
+            time.textContent = formatTimestamp(item.timestamp, locale);
 
             text.appendChild(name);
             text.appendChild(time);
+
+            const actions = document.createElement('div');
+            actions.className = 'history-actions-inline';
+
+            // Star button for favorites
+            const starButton = document.createElement('button');
+            starButton.className = 'history-star';
+            const isFav = typeof FavoritesManager !== 'undefined' && FavoritesManager.isFavorite ? FavoritesManager.isFavorite(item.username) : false;
+            starButton.textContent = isFav ? '★' : '☆';
+            starButton.title = isFav ? 'Remove from favorites' : 'Add to favorites';
+            starButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (typeof FavoritesManager !== 'undefined') {
+                    FavoritesManager.toggleFavorite(item);
+                }
+            });
 
             const deleteButton = document.createElement('button');
             deleteButton.className = 'history-delete';
@@ -263,29 +321,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderHistory();
             });
 
+            actions.appendChild(starButton);
+            actions.appendChild(deleteButton);
+
             row.addEventListener('click', () => {
                 navigator.clipboard.writeText(item.username)
                     .then(() => {
-                        alert('Username copied to clipboard!');
+                        const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
+                        alert(message);
                     })
                     .catch((error) => {
                         console.error('Failed to copy username', error);
-                        alert('Copy failed. Please try again.');
+                        const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
+                        alert(failMessage);
                     });
             });
 
             row.appendChild(text);
-            row.appendChild(deleteButton);
+            row.appendChild(actions);
             historyList.appendChild(row);
         });
 
-        loadMoreHistoryButton.disabled = visibleHistoryCount >= history.length;
+        if (!isFiltered && loadMoreHistoryButton) {
+            loadMoreHistoryButton.disabled = visibleHistoryCount >= history.length;
+        }
     }
 
     function addHistoryEntry(username) {
         const timestamp = Date.now();
         history = upsertHistory(history, { username, timestamp }, HISTORY_LIMIT);
         persistHistory(history);
+        // Update history filter cache
+        if (typeof HistoryFilter !== 'undefined') {
+            HistoryFilter.updateHistory(history);
+        }
         visibleHistoryCount = Math.min(history.length, Math.max(visibleHistoryCount, HISTORY_BATCH_SIZE));
         renderHistory();
     }
@@ -305,6 +374,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 history = Array.isArray(result[HISTORY_KEY]) ? result[HISTORY_KEY] : [];
                 history.sort((a, b) => b.timestamp - a.timestamp);
             }
+            // Update history filter cache after loading
+            if (typeof HistoryFilter !== 'undefined') {
+                HistoryFilter.updateHistory(history);
+            }
             visibleHistoryCount = Math.min(history.length, HISTORY_BATCH_SIZE);
             renderHistory();
         });
@@ -322,11 +395,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function copyUsername() {
         navigator.clipboard.writeText(generatedUsername.textContent)
             .then(() => {
-                alert('Username copied to clipboard!');
+                const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
+                alert(message);
             })
             .catch((error) => {
                 console.error('Failed to copy username', error);
-                alert('Copy failed. Please try again.');
+                const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
+                alert(failMessage);
             });
     }
 
@@ -377,19 +452,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 uppercaseCheckbox.checked = true;
                 lowercaseCheckbox.checked = true;
                 numbersCheckbox.checked = false;
+                numbersCheckbox.disabled = true;  // Disable: not compatible with pronounceable names
                 symbolsCheckbox.checked = false;
+                symbolsCheckbox.disabled = true;  // Disable: not compatible with pronounceable names
                 break;
             case 'easyToRead':
                 uppercaseCheckbox.checked = true;
                 lowercaseCheckbox.checked = true;
                 numbersCheckbox.checked = true;
+                numbersCheckbox.disabled = false;  // Enable
                 symbolsCheckbox.checked = false;
+                symbolsCheckbox.disabled = false;  // Enable (user can choose)
                 break;
             case 'allCharacters':
                 uppercaseCheckbox.checked = true;
                 lowercaseCheckbox.checked = true;
                 numbersCheckbox.checked = true;
+                numbersCheckbox.disabled = false;  // Enable
                 symbolsCheckbox.checked = true;
+                symbolsCheckbox.disabled = false;  // Enable
                 break;
             default:
                 break;
@@ -409,7 +490,82 @@ document.addEventListener('DOMContentLoaded', function() {
     if (easyToReadRadio && easyToReadRadio.checked) applyPreset('easyToRead');
     if (allCharactersRadio && allCharactersRadio.checked) applyPreset('allCharacters');
 
-    // Load history first, then seed initial username if empty
+    // === Module Initialization ===
+    // Order matters: i18n -> theme -> favorites -> other modules
+
+    // 1. Initialize i18n manager
+    if (typeof I18nManager !== 'undefined') {
+        I18nManager.init(storage, () => {
+            // Translations loaded
+        });
+
+        if (languageSelector) {
+            languageSelector.value = I18nManager.getLanguage();
+            languageSelector.addEventListener('change', (e) => {
+                I18nManager.setLanguage(e.target.value);
+            });
+        }
+    }
+
+    // 2. Initialize theme manager
+    if (typeof ThemeManager !== 'undefined') {
+        ThemeManager.init(storage, () => {
+            // Theme loaded
+        });
+
+        if (themeSelector) {
+            themeSelector.value = ThemeManager.getTheme();
+            themeSelector.addEventListener('change', (e) => {
+                ThemeManager.setTheme(e.target.value);
+            });
+        }
+    }
+
+    // 3. Initialize favorites manager
+    if (typeof FavoritesManager !== 'undefined') {
+        FavoritesManager.init(storage, () => {
+            FavoritesManager.renderFavorites();
+        });
+    }
+
+    // 4. Initialize history filter
+    if (typeof HistoryFilter !== 'undefined' && historySearchInput) {
+        HistoryFilter.init(historySearchInput, historyList, clearSearchButton);
+    }
+
+    // 5. Initialize keyboard shortcuts
+    if (typeof KeyboardShortcuts !== 'undefined') {
+        KeyboardShortcuts.init({
+            generate: updateUsername,
+            copy: copyUsername
+        });
+    }
+
+    // === New Event Handlers ===
+
+    // Export history to CSV
+    if (exportHistoryButton) {
+        exportHistoryButton.addEventListener('click', () => {
+            if (typeof CSVExporter !== 'undefined') {
+                const searchQuery = typeof HistoryFilter !== 'undefined' ? HistoryFilter.getSearchQuery() : '';
+                const historyToExport = searchQuery
+                    ? history.filter(item => item.username.toLowerCase().includes(searchQuery.toLowerCase()))
+                    : history;
+                CSVExporter.exportToCSV(historyToExport, formatTimestamp);
+            }
+        });
+    }
+
+    // Clear search button
+    if (clearSearchButton) {
+        clearSearchButton.addEventListener('click', () => {
+            if (typeof HistoryFilter !== 'undefined') {
+                HistoryFilter.clear();
+            }
+        });
+    }
+
+    // === Load history and seed initial username ===
     loadHistory();
     storage && storage.get ? storage.get([HISTORY_KEY], (result) => {
         if (chrome.runtime && chrome.runtime.lastError) {
@@ -427,10 +583,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }) : updateUsername(true);
 
+    // === Expose state and helpers for inter-module communication ===
     if (typeof window !== 'undefined') {
+        window.__usernameGeneratorState = {
+            history,
+            locale: typeof I18nManager !== 'undefined' ? I18nManager.getLanguage() : 'en',
+            renderHistory,
+            renderFilteredHistory: (filteredItems) => renderHistory(filteredItems)
+        };
+
         window.__usernameGeneratorTestHelpers = {
             upsertHistory,
-            formatTimestamp
+            formatTimestamp,
+            generateUsername,
+            getOptions
         };
     }
 });

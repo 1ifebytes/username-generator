@@ -4,56 +4,73 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Chrome extension that generates customized usernames based on user-specified criteria. The extension provides a popup interface with various options for username generation including character types, length, and readability preferences.
+A Chrome extension (Manifest V3) that generates customizable usernames. Clicking the extension icon opens a full-page UI (`page.html`) with history management, copy functionality, and various generation modes.
+
+**Key features:** Dual interface (popup + full-page), history persistence via `chrome.storage.local` (up to 50 items with lazy loading), three generation modes (pronounceable, readable, all characters), and cryptographically secure random generation.
+
+## Development Commands
+
+```bash
+# Run tests (Jest with jsdom environment)
+npm test
+
+# Load extension for development
+# 1. Open chrome://extensions/
+# 2. Enable "Developer mode"
+# 3. Click "Load unpacked" and select the chrome-extension/ directory
+
+# Package for distribution (manual)
+zip -r dist/usernameGenerator.zip chrome-extension/
+```
 
 ## Architecture
 
-The project follows a simple Chrome extension structure:
+### Entry Points
+- **background.js**: Service worker that intercepts extension icon clicks and opens `page.html` in a new tab
+- **page.html**: Full-page interface with comprehensive history UI
+- **popup.html**: Simplified popup interface (alternative entry point)
 
-- **manifest.json**: Chrome extension configuration (Manifest V3)
-- **popup.html**: Main UI interface with form controls for customization
-- **popup.js**: Core logic for username generation and UI interactions
-- **popup.css**: Styling for the popup interface
-- **icon.png**: Extension icon
+### Core Logic (popup.js - shared by both interfaces)
 
-### Key Components
+All username generation, history management, and UI state handling lives in `popup.js`. This single file is loaded by both `page.html` and `popup.html`.
 
-**Username Generation Logic** (`popup.js:21-157`):
-- Three generation modes: "Easy to say" (syllable-based), "Easy to read" (removes ambiguous characters), and "All characters"
-- Character sets: lowercase, uppercase, numbers, symbols
-- Configurable length (3-30 characters)
+**Generation Modes:**
+- **Easy to say** (`popup.js:91-139`): Syllable-based patterns using consonant/vowel alternation (CV, CVC, VC). Requires at least one case option; auto-enables lowercase if none selected.
+- **Easy to read** (`popup.js:141-152`): Removes ambiguous characters via regex `/[Il1O0S5B8Z2]/g` from selected character sets
+- **All characters** (`popup.js:154-165`): Standard random selection from chosen character sets
 
-**UI Controls** (`popup.html`):
-- Radio buttons for readability modes
-- Checkboxes for character type selection
-- Length input with synchronized number input and range slider
-- Generate and copy buttons
+**History System** (`popup.js:197-265`):
+- Uses `chrome.storage.local` with key `usernameHistory`
+- Lazy loading: displays 10 items initially, "Load more" button shows batches of 10
+- Maximum 50 items total (FIFO eviction)
+- Each entry stores: username, timestamp (YYYY-MM-DD HH:mm:ss local time)
+- Individual delete, clear all, click-to-copy functionality
 
-## Development
+**Random Generation** (`popup.js:60-68`):
+- Uses `window.crypto.getRandomValues()` when available for cryptographic security
+- Falls back to `Math.random()` in non-secure contexts
 
-### File Structure
+### Constants and Configuration
+
+```javascript
+LOWERCASE = 'abcdefghijklmnopqrstuvwxyz'
+UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+NUMBERS = '0123456789'
+SYMBOLS = '!@#$%^&*()'
+VOWELS = 'aeiou'
+CONSONANTS = 'bcdfghjklmnpqrstvwxyz'
+AMBIGUOUS_PATTERN = /[Il1O0S5B8Z2]/g
+HISTORY_LIMIT = 50
+HISTORY_BATCH_SIZE = 10
 ```
-chrome-extension/
-├── manifest.json      # Extension configuration
-├── popup.html         # Main UI
-├── popup.js          # Generation logic and event handlers
-├── popup.css         # Styling
-└── icon.png          # Extension icon
-```
 
-### Testing the Extension
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked" and select the `chrome-extension` directory
-4. Test by clicking the extension icon in the toolbar
+### UI Synchronization
 
-### Key Functions
-- `generateUsername(options)`: Main generation logic with three different algorithms
-- `getOptions()`: Extracts current UI state
-- `updateUsername()`: Regenerates and displays new username
-- `copyUsername()`: Copies generated username to clipboard using Chrome's clipboard API
+Length input and slider are synchronized via `syncLengthInputs()` (`popup.js:40-45`). Both values are clamped to 3-30 characters. Input validation handles NaN defaults to 8.
 
-### Character Generation Strategies
-- **Easy to say**: Uses syllable patterns (CV, CVC, VC) with vowels and consonants
-- **Easy to read**: Excludes ambiguous characters (I, l, 1, O, 0)
-- **All characters**: Standard random selection from chosen character sets
+## Important Design Decisions
+
+1. **Minimal Permissions**: Only `storage` permission is requested; no `activeTab` or host permissions needed
+2. **Vanilla JS**: No external dependencies for the extension itself - maximum compatibility and small bundle size
+3. **Shared Logic**: Single `popup.js` serves both popup and full-page contexts to avoid code duplication
+4. **Chrome Storage Fallback**: Code gracefully handles environments without `chrome.storage.local` (e.g., testing in `test.html`)

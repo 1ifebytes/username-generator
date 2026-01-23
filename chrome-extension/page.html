@@ -12,80 +12,133 @@
             <div class="brand">
                 <img src="icon.png" alt="" class="brand-icon" aria-hidden="true">
                 <div class="brand-text">
-                    <p class="eyebrow">Chrome Extension</p>
-                    <h1>Username Generator</h1>
+                    <p class="eyebrow" data-i18n="app.subtitle">Chrome Extension</p>
+                    <h1 data-i18n="app.title">Username Generator</h1>
                 </div>
             </div>
-            <p class="lede">Customize a readable username, sync length controls, and copy with one click.</p>
+            <p class="lede" data-i18n="app.description">Customize a readable username, sync length controls, and copy with one click.</p>
+            <div class="settings-row">
+                <div class="theme-toggle">
+                    <select id="theme-selector" aria-label="Select theme">
+                        <option value="system" data-i18n="theme.system">System</option>
+                        <option value="light" data-i18n="theme.light">Light</option>
+                        <option value="dark" data-i18n="theme.dark">Dark</option>
+                    </select>
+                </div>
+                <div class="language-selector">
+                    <select id="language-selector" aria-label="Select language">
+                        <option value="en">English</option>
+                        <option value="zh">中文</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                </div>
+            </div>
         </header>
 
         <section class="container">
             <div class="username-display">
                 <span id="generated-username">c0lISTES</span>
             </div>
-            <h2>Customize your username</h2>
+            <h2 data-i18n="customize.title">Customize your username</h2>
             <div class="options-container">
                 <div class="options-column">
                     <div class="option">
                         <input type="radio" id="easy-to-say" name="readability" checked>
-                        <label for="easy-to-say">Easy to say</label>
-                        <span class="info-icon" title="Avoid numbers and special characters">i</span>
+                        <label for="easy-to-say" data-i18n="mode.easyToSay">Easy to say</label>
+                        <span class="info-icon"
+                              data-i18n-title="mode.easyToSay.tooltip"
+                              title="Avoid numbers and special characters">i</span>
                     </div>
                     <div class="option">
                         <input type="radio" id="easy-to-read" name="readability">
-                        <label for="easy-to-read">Easy to read</label>
-                        <span class="info-icon" title="Avoid ambiguous characters like I, l, 1, O, 0, S, 5, B, 8, Z, and 2">i</span>
+                        <label for="easy-to-read" data-i18n="mode.easyToRead">Easy to read</label>
+                        <span class="info-icon"
+                              data-i18n-title="mode.easyToRead.tooltip"
+                              title="Avoid ambiguous characters like I, l, 1, O, 0, S, 5, B, 8, Z, and 2">i</span>
                     </div>
                     <div class="option">
                         <input type="radio" id="all-characters" name="readability">
-                        <label for="all-characters">All characters</label>
-                        <span class="info-icon" title="Any character combinations like !, 7, h, K, and l1">i</span>
+                        <label for="all-characters" data-i18n="mode.allCharacters">All characters</label>
+                        <span class="info-icon"
+                              data-i18n-title="mode.allCharacters.tooltip"
+                              title="Any character combinations like !, 7, h, K, and l1">i</span>
                     </div>
                 </div>
                 <div class="options-column">
                     <div class="option">
                         <input type="checkbox" id="uppercase">
-                        <label for="uppercase">Uppercase</label>
+                        <label for="uppercase" data-i18n="char.uppercase">Uppercase</label>
                     </div>
                     <div class="option">
                         <input type="checkbox" id="lowercase" checked>
-                        <label for="lowercase">Lowercase</label>
+                        <label for="lowercase" data-i18n="char.lowercase">Lowercase</label>
                     </div>
                     <div class="option">
                         <input type="checkbox" id="numbers">
-                        <label for="numbers">Numbers</label>
+                        <label for="numbers" data-i18n="char.numbers">Numbers</label>
                     </div>
                     <div class="option">
                         <input type="checkbox" id="symbols">
-                        <label for="symbols">Symbols</label>
+                        <label for="symbols" data-i18n="char.symbols">Symbols</label>
                     </div>
                 </div>
             </div>
             <div class="length-container">
-                <label for="length">Username Length</label>
+                <label for="length" data-i18n="length.label">Username Length</label>
                 <input type="number" id="length" min="3" max="30" value="8">
                 <input type="range" id="length-slider" min="3" max="30" value="8">
             </div>
             <div class="button-container">
-                <button id="generate-username">Generate Username</button>
-                <button id="copy-username" class="secondary">Copy Username</button>
+                <button id="generate-username" data-i18n="button.generate">Generate Username</button>
+                <button id="copy-username" class="secondary" data-i18n="button.copy">Copy Username</button>
             </div>
+
+            <!-- History Section -->
             <section class="history-section">
                 <div class="history-header">
                     <div>
-                        <p class="eyebrow">History</p>
-                        <h3>Recent usernames</h3>
+                        <p class="eyebrow" data-i18n="history.title">History</p>
+                        <h3 data-i18n="history.subtitle">Recent usernames</h3>
                     </div>
                     <div class="history-actions">
-                        <button id="clear-history" class="ghost">Clear all</button>
-                        <button id="load-more-history" class="ghost">Load more</button>
+                        <button id="clear-history" class="ghost" data-i18n="history.clear">Clear all</button>
+                        <button id="load-more-history" class="ghost" data-i18n="history.loadMore">Load more</button>
+                        <button id="export-history" class="ghost" data-i18n="history.export">Export CSV</button>
                     </div>
                 </div>
+                <div class="history-search">
+                    <input type="text"
+                           id="history-search"
+                           data-i18n-placeholder="history.search"
+                           placeholder="Search history..."
+                           aria-label="Search username history" />
+                    <button id="clear-search" class="icon-button" style="display: none;" aria-label="Clear search">✕</button>
+                </div>
                 <div class="history-list" id="history-list" aria-live="polite"></div>
-                <p class="empty-history" id="empty-history">No usernames yet. Generate one to get started.</p>
+                <p class="empty-history" id="empty-history" data-i18n="history.empty">No usernames yet. Generate one to get started.</p>
+            </section>
+
+            <!-- Favorites Section -->
+            <section class="history-section">
+                <div class="history-header">
+                    <div>
+                        <p class="eyebrow" data-i18n="favorites.title">Favorites</p>
+                        <h3 data-i18n="favorites.subtitle">Saved usernames</h3>
+                    </div>
+                </div>
+                <div class="history-list" id="favorites-list" aria-live="polite"></div>
+                <p class="empty-history" id="empty-favorites" data-i18n="favorites.empty">No favorites yet. Star a username to save it.</p>
             </section>
         </section>
     </main>
+
+    <!-- Load modules first, then main script -->
+    <script src="modules/i18n-manager.js"></script>
+    <script src="modules/theme-manager.js"></script>
+    <script src="modules/favorites-manager.js"></script>
+    <script src="modules/keyboard-shortcuts.js"></script>
+    <script src="modules/history-filter.js"></script>
+    <script src="modules/csv-exporter.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

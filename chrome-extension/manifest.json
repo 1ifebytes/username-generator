@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Username Generator",
-  "version": "1.0",
-  "description": "Generate custom usernames with various options",
+  "version": "1.1",
+  "description": "Generate custom usernames with history, favorites, dark mode, and multi-language support",
   "background": {
     "service_worker": "background.js"
   },
