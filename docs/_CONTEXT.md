@@ -8,7 +8,13 @@
   - 全页面 `page.html` 保留历史、收藏、搜索、CSV、主题、语言。
   - 抽出共享模块：`generator-core.js`、`history-store.js`、`toast.js`。
   - 移除已失效的 `background.js` 与 manifest `background`。
-- 测试 13/13 通过；已用真实浏览器（HTTP 预览）验证：生成、复制 toast、历史不因拖拽增长、深色模式、中文切换与时间戳本地化。
+- 测试 17/17 通过；已用真实浏览器（HTTP 预览）验证：生成、复制 toast、历史不因拖拽增长、深色模式、8 种语言切换与时间戳格式。
+
+## 多语言
+- 支持 8 种界面语言：`en`、`zh`（简体）、`zh-TW`（繁體）、`ja`、`ko`、`es`、`fr`、`de`。
+- 语言下拉在弹窗与全页面都由 `I18nManager.getSupportedLanguages()` 动态生成；新增语言只需在 `modules/i18n-manager.js` 加字典 + 在 `LANGUAGE_NAMES` / `getLocaleCode` 补映射。
+- 时间戳改为与语言无关的固定格式 `YYYY-MM-DD HH:mm:ss`（本地时区），避免德语/法语等产生 `17.10.2026, ...`。
+- 测试会校验每种语言是否定义了全部 41 个 key（`I18nManager.hasTranslation`）。
 
 ## Next Steps
 阶段 1 剩余项（按优先级）：
@@ -27,6 +33,8 @@
 - **弹窗预设映射**：quick popup 的 mode 映射到与全页面 preset 一致的角色开关（easyToSay=字母；easyToRead=字母+数字；allCharacters=全开）。
 - **弹窗偏好持久化**：`quickSettings`（mode + length）存 `chrome.storage.local`，下次打开恢复。
 - **移除 background**：设置 `default_popup` 后 `chrome.action.onClicked` 不再触发，保留 service worker 属死代码，故删除。
+- **多语言数据驱动**：语言列表从 `LANGUAGE_NAMES` / `translations` 派生，HTML 不再硬编码 option；`getLocaleCode` 仅用于日期相关能力（当前时间戳已改为固定格式）。
+- **时间戳固定格式**：`formatTimestamp` 手工补零拼接，不再依赖 `toLocaleString`，保证跨语言一致。
 
 ## Gotchas（不要动）
 - **脚本加载顺序**：`page.html` 必须按 i18n → theme → generator-core → history-store → toast → favorites → keyboard → history-filter → csv → popup.js；`popup-quick.html` 必须按 i18n → theme → generator-core → history-store → toast → popup-quick.js。模块是 IIFE `const`，缺一个就会 `ReferenceError`。
@@ -36,5 +44,7 @@
 - **`HistoryStore.add` 是 read-modify-write**，快速连点理论上可能丢条目；当前接受，后续可串行化。
 - **`easyToSay` 下 numbers/symbols 被 preset 禁用** 是刻意行为。
 - **`chrome.storage` 回调必须检查 `chrome.runtime.lastError`**；`storage` 可能为 null（file:// 或普通网页）。
+- **新增语言时**：必须同时补 `translations[code]` 的全部 key、`LANGUAGE_NAMES[code]`、`getLocaleCode[code]`，否则测试会红（`hasTranslation` 校验全部 key）。
+- **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
 - 尚未 push；提交只在本地。

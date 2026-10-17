@@ -1,5 +1,5 @@
 # Username Generator Chrome Extension  
-English | 中文 | 粵語
+English | 简体中文 | 繁體中文 | 日本語 | 한국어 | Español | Français | Deutsch
 
 ## English
 **Description**  
@@ -11,6 +11,7 @@ Full-page username generator (Manifest V3) for Chrome. Build pronounceable or re
 - Toggles: uppercase, lowercase, numbers, symbols
 - History (local): up to 50 items in `chrome.storage.local`, timestamps (YYYY-MM-DD HH:mm:ss, local), lazy load, click-to-copy, delete single, clear all
 - Quick toolbar popup for one-click generate/copy, plus a full page (`chrome-extension/page.html`) for history and favorites; non-blocking toast feedback
+- UI languages: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Français, Deutsch
 
 **Installation**
 1. Download/clone the repo.
@@ -39,6 +40,7 @@ MIT
 - 选项：可选大写/小写/数字/符号
 - 历史（本地）：`chrome.storage.local` 保存最多 50 条，时间戳 YYYY-MM-DD HH:mm:ss（本地时区），懒加载，点击复制，单条删除与清空
 - 工具栏轻量弹窗一键生成/复制；全页面（`chrome-extension/page.html`）承载历史与收藏；非阻塞 toast 提示
+- 界面语言：English、简体中文、繁體中文、日本語、한국어、Español、Français、Deutsch
 
 **安装**
 1. 下载/克隆本仓库。
@@ -67,6 +69,7 @@ Chrome 全頁版用戶名產生器（MV3），快速生出易講或易讀嘅用�
 - 選項：大細階、數字、符號任揀
 - 歷史（本地）：`chrome.storage.local` 最多 50 條，時間戳 YYYY-MM-DD HH:mm:ss（本地時區），懶加載，點擊可複製，支援刪單條/清空
 - 工具列輕量彈窗一鍵生成/複製；全頁面（`chrome-extension/page.html`）承載歷史同收藏；非阻塞 toast 提示
+- 介面語言：English、简体中文、繁體中文、日本語、한국어、Español、Français、Deutsch
 
 **安裝**
 1. 下載/clone 倉庫。
