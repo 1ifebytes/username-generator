@@ -26,26 +26,26 @@ zip -r dist/usernameGenerator.zip chrome-extension/
 ## Architecture
 
 ### Entry Points
-- **background.js**: Service worker that intercepts extension icon clicks and opens `page.html` in a new tab
+- **popup-quick.html**: Lightweight toolbar popup (`default_popup`) for one-click generate/copy, with a link to the full page
 - **page.html**: Full-page interface with comprehensive history UI
 
-### Core Logic (popup.js)
+### Core Logic
 
-All username generation, history management, and UI state handling lives in `popup.js`, which is loaded by `page.html`.
+Generation lives in `modules/generator-core.js` (`UsernameGenerator`), history persistence in `modules/history-store.js` (`HistoryStore`), and toasts in `modules/toast.js` (`Toast`). Both `popup-quick.js` and `popup.js` consume these modules; `popup.js` wires the full-page UI.
 
 **Generation Modes:**
-- **Easy to say** (`popup.js:91-139`): Syllable-based patterns using consonant/vowel alternation (CV, CVC, VC). Requires at least one case option; auto-enables lowercase if none selected.
-- **Easy to read** (`popup.js:141-152`): Removes ambiguous characters via regex `/[Il1O0S5B8Z2]/g` from selected character sets
-- **All characters** (`popup.js:154-165`): Standard random selection from chosen character sets
+- **Easy to say** (`modules/generator-core.js`): Syllable-based patterns using consonant/vowel alternation (CV, CVC, VC). Requires at least one case option; auto-enables lowercase if none selected.
+- **Easy to read** (`modules/generator-core.js`): Removes ambiguous characters via regex `/[Il1O0S5B8Z2]/g` from selected character sets
+- **All characters** (`modules/generator-core.js`): Standard random selection from chosen character sets
 
-**History System** (`popup.js:197-265`):
+**History System** (`modules/history-store.js`):
 - Uses `chrome.storage.local` with key `usernameHistory`
 - Lazy loading: displays 10 items initially, "Load more" button shows batches of 10
 - Maximum 50 items total (FIFO eviction)
 - Each entry stores: username, timestamp (YYYY-MM-DD HH:mm:ss local time)
 - Individual delete, clear all, click-to-copy functionality
 
-**Random Generation** (`popup.js:60-68`):
+**Random Generation** (`modules/generator-core.js`):
 - Uses `window.crypto.getRandomValues()` when available for cryptographic security
 - Falls back to `Math.random()` in non-secure contexts
 
@@ -71,5 +71,5 @@ Length input and slider are synchronized via `syncLengthInputs()` (`popup.js:40-
 
 1. **Minimal Permissions**: Only `storage` permission is requested; no `activeTab` or host permissions needed
 2. **Vanilla JS**: No external dependencies for the extension itself - maximum compatibility and small bundle size
-3. **Shared Logic**: Single `popup.js` serves both popup and full-page contexts to avoid code duplication
+3. **Shared Logic**: `modules/generator-core.js`, `history-store.js` and `toast.js` are reused by both the quick popup and the full page to avoid duplication
 4. **Chrome Storage Fallback**: Code gracefully handles environments without `chrome.storage.local` (e.g., testing in `test.html`)

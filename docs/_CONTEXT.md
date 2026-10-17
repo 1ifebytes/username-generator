@@ -1,33 +1,40 @@
 # Username Generator — Session Context
 
 ## Current Status
-- 本地仓库已同步到 `origin/master`（`1871d7d`），历史干净，master == origin/master。
-- 已完成 **阶段 0（地基）**，两个提交：
-  - `3a69ea1` chore: remove dead popup.html, add icon sizes, and set up CI
-  - `30c6d8c` fix: stop writing history on every option change and use toast feedback
-- 9/9 Jest 测试通过；`node --check` 与 manifest JSON 校验通过。
+- 本地仓库已同步到 `origin/master`（`1871d7d`）基础上继续开发。
+- **阶段 0（地基）完成**：历史写入语义修复、toast 替代 alert、null 保护、state getter、图标 16/32/48、版本统一 `1.2.0`、CI、删除死代码。
+- **阶段 1 第一项完成：双入口**
+  - 工具栏走轻量弹窗 `popup-quick.html`（默认 popup），一键生成/复制 + “More options & history →”。
+  - 全页面 `page.html` 保留历史、收藏、搜索、CSV、主题、语言。
+  - 抽出共享模块：`generator-core.js`、`history-store.js`、`toast.js`。
+  - 移除已失效的 `background.js` 与 manifest `background`。
+- 测试 13/13 通过；已用真实浏览器（HTTP 预览）验证：生成、复制 toast、历史不因拖拽增长、深色模式、中文切换与时间戳本地化。
 
 ## Next Steps
-按优先级，下一步是 **阶段 1（体验升级）**：
-1. 在 manifest 加 `default_popup`，做一个「一键生成 + 复制 + 打开全页面」的轻量弹窗（全页面保留历史/收藏）。
-2. 生成即复制（可开关），复制成功按钮态变化。
-3. 快捷键提示、空状态引导、窄屏响应式、a11y（历史行可 Tab 聚焦）。
-4. 之后再进阶段 2：场景预设（Gaming / Social / Email）、批量生成、`chrome.storage.sync`。
+阶段 1 剩余项（按优先级）：
+1. “生成即复制”开关（默认关闭），复制后按钮短暂变为 ✓。
+2. 弹窗内显示快捷键提示（Enter 生成 / Ctrl+C 复制）。
+3. 空状态引导（历史/收藏各带行动按钮）。
+4. a11y：历史行可 Tab 聚焦、info 图标可聚焦、`aria-live` 避免整表重渲染。
+5. 窄屏响应式打磨（全页面 < 480px）。
+
+之后进入阶段 2：场景预设（Gaming / Social / Email）、批量生成、导出/导入 JSON、`chrome.storage.sync` 跨设备。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
-- **预览与提交分离**：`previewUsername()` 只改显示；`commitUsername()` 才写历史。滑条/勾选/单选只预览，Generate / 快捷键 / Copy 才落库。这是为了防止历史被拖拽刷屏。
-- **Toast 替代 alert**：`showToast(message, type)` 动态创建 `#toast`，非阻塞、2s 自动消失、复用同一节点。样式在 `popup.css`，用 CSS 变量支持深色模式。
-- **`window.__usernameGeneratorState.history` 改为 getter**：模块每次读到的都是当前数组，避免初始化时捕获空数组的陈旧引用。
-- **删除 `popup.html`**：它已不在 manifest 中、不可达，且缺少历史/收藏容器。阶段 1 会用全新弹窗替代。
-- **图标分层**：`icon.png`（128）保留给 `page.html`，`icons/icon{16,32,48}.png` 供 manifest 使用（`sips` 生成）。
-- **版本统一为 `1.2.0`**（manifest 与 package.json）。
+- **默认 popup + 全页面链接**：`manifest.action.default_popup` 指向 `popup-quick.html`；全页面通过 `chrome.tabs.create(chrome.runtime.getURL('page.html'))` 打开。`tabs.create` 不需要额外权限。
+- **共享核心**：生成逻辑在 `modules/generator-core.js`（`UsernameGenerator`），历史读写在 `modules/history-store.js`（`HistoryStore`），提示在 `modules/toast.js`（`Toast`）。弹窗与全页面复用，避免复制粘贴。
+- **预览 vs 提交**：`previewUsername()` 只改显示；`commitUsername()` 才写历史。滑条/输入/勾选/单选只预览；Generate、Ctrl+G、Copy 才落库。
+- **弹窗预设映射**：quick popup 的 mode 映射到与全页面 preset 一致的角色开关（easyToSay=字母；easyToRead=字母+数字；allCharacters=全开）。
+- **弹窗偏好持久化**：`quickSettings`（mode + length）存 `chrome.storage.local`，下次打开恢复。
+- **移除 background**：设置 `default_popup` 后 `chrome.action.onClicked` 不再触发，保留 service worker 属死代码，故删除。
 
 ## Gotchas（不要动）
-- `popup.js` 全部逻辑在 `DOMContentLoaded` 回调内，每次派发事件都会创建全新闭包；测试依赖这一点，不要把它提到顶层。
-- `page.html` 与 `popup.js` 的 DOM id 必须保持一致；测试直接从 `page.html` 读 DOM。
-- 测试通过 `window.__usernameGeneratorTestHelpers` 访问 `upsertHistory / formatTimestamp / generateUsername / getOptions`，改这些签名会破坏测试。
-- `easyToSay` 模式下 numbers/symbols 会被 preset 禁用，这是刻意行为。
-- 历史去重置顶逻辑在 `upsertHistory`：先按 username 过滤，再 unshift，再按 timestamp 排序，最后截断 50。
-- `chrome.storage` 回调里必须检查 `chrome.runtime.lastError`；`storage` 可能为 null（非扩展环境）。
-- 本地未跟踪文件 `.idea/` 与 `test-v11.html` 是作者个人的，不要提交或删除。
+- **脚本加载顺序**：`page.html` 必须按 i18n → theme → generator-core → history-store → toast → favorites → keyboard → history-filter → csv → popup.js；`popup-quick.html` 必须按 i18n → theme → generator-core → history-store → toast → popup-quick.js。模块是 IIFE `const`，缺一个就会 `ReferenceError`。
+- **测试如何加载模块**：`tests/generator.test.js` 用 `new Function(source + 'return X;')` 把 IIFE 挂到 `global`，再 `require` popup.js。不要把模块改成 ESM/CommonJS，否则测试会坏。
+- **`popup.js` 全部逻辑在 DOMContentLoaded 内**，每次派发事件都会创建新闭包；测试依赖这一点。
+- **`window.__usernameGeneratorState.history` 是 getter**，不要改回普通属性（会捕获旧数组）。
+- **`HistoryStore.add` 是 read-modify-write**，快速连点理论上可能丢条目；当前接受，后续可串行化。
+- **`easyToSay` 下 numbers/symbols 被 preset 禁用** 是刻意行为。
+- **`chrome.storage` 回调必须检查 `chrome.runtime.lastError`**；`storage` 可能为 null（file:// 或普通网页）。
+- 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
 - 尚未 push；提交只在本地。
