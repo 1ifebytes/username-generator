@@ -47,4 +47,5 @@
 - **新增语言时**：必须同时补 `translations[code]` 的全部 key、`LANGUAGE_NAMES[code]`、`getLocaleCode[code]`，否则测试会红（`hasTranslation` 校验全部 key）。
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
-- 尚未 push；提交只在本地。
+- 当前工作在 `feature/v1.2-experience` 分支，基于 `origin/master`（`1871d7d`）；8 个提交尚未 push。本地 `master` 已复位到 `origin/master`。
+- **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。
