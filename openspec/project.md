@@ -14,7 +14,7 @@ Chrome MV3 extension for generating customizable usernames. Provides UI controls
 - ES2015+ JavaScript; prefer `const`/`let` and arrow functions for callbacks
 - 4-space indentation, single quotes
 - camelCase for variables/functions; PascalCase only for constructors
-- UI files live at repo root (`popup.html`, `popup.css`, `popup.js`); reusable fragments under `assets/`
+- UI files live at `chrome-extension/page.html`, `popup.css`, `popup.js`; shared modules under `chrome-extension/modules/`
 - Event handlers registered inside `DOMContentLoaded` callback
 - Manifest must list every new script, HTML page, or asset
 

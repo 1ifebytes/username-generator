@@ -28,11 +28,10 @@ zip -r dist/usernameGenerator.zip chrome-extension/
 ### Entry Points
 - **background.js**: Service worker that intercepts extension icon clicks and opens `page.html` in a new tab
 - **page.html**: Full-page interface with comprehensive history UI
-- **popup.html**: Simplified popup interface (alternative entry point)
 
-### Core Logic (popup.js - shared by both interfaces)
+### Core Logic (popup.js)
 
-All username generation, history management, and UI state handling lives in `popup.js`. This single file is loaded by both `page.html` and `popup.html`.
+All username generation, history management, and UI state handling lives in `popup.js`, which is loaded by `page.html`.
 
 **Generation Modes:**
 - **Easy to say** (`popup.js:91-139`): Syllable-based patterns using consonant/vowel alternation (CV, CVC, VC). Requires at least one case option; auto-enables lowercase if none selected.
