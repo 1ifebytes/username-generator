@@ -125,23 +125,31 @@ document.addEventListener('DOMContentLoaded', function() {
         historyList.innerHTML = '';
         const itemsToRender = filteredItems || history.slice(0, visibleHistoryCount);
         const isFiltered = filteredItems !== null;
+        const copyLabel = typeof I18nManager !== 'undefined'
+            ? I18nManager.t('a11y.copy')
+            : 'Copy username';
 
         if (itemsToRender.length === 0) {
-            emptyHistory.style.display = 'block';
+            if (emptyHistory) emptyHistory.style.display = 'flex';
             if (loadMoreHistoryButton) loadMoreHistoryButton.disabled = true;
             return;
         }
 
-        emptyHistory.style.display = 'none';
+        if (emptyHistory) emptyHistory.style.display = 'none';
 
         itemsToRender.forEach(item => {
             const row = document.createElement('div');
             row.className = 'history-item';
+            row.setAttribute('role', 'listitem');
             row.setAttribute('data-username', item.username);
             row.setAttribute('data-timestamp', item.timestamp);
 
             const text = document.createElement('div');
             text.className = 'history-text';
+            // Focusable so keyboard users can copy without a mouse.
+            text.setAttribute('tabindex', '0');
+            text.setAttribute('role', 'button');
+            text.setAttribute('aria-label', `${copyLabel}: ${item.username}`);
 
             const name = document.createElement('div');
             name.className = 'history-username';
@@ -185,17 +193,15 @@ document.addEventListener('DOMContentLoaded', function() {
             actions.appendChild(starButton);
             actions.appendChild(deleteButton);
 
-            row.addEventListener('click', () => {
-                navigator.clipboard.writeText(item.username)
-                    .then(() => {
-                        const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
-                        showToast(message);
-                    })
-                    .catch((error) => {
-                        console.error('Failed to copy username', error);
-                        const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
-                        showToast(failMessage, 'error');
-                    });
+            const copyItem = () => copyToClipboard(item.username);
+
+            row.addEventListener('click', copyItem);
+
+            text.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    copyItem();
+                }
             });
 
             row.appendChild(text);
@@ -254,6 +260,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * Copy a username and report the outcome.
+     * @param {string} username - Username to copy
+     */
+    function copyToClipboard(username) {
+        if (!username) return;
+
+        navigator.clipboard.writeText(username)
+            .then(() => {
+                const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
+                showToast(message);
+            })
+            .catch((error) => {
+                console.error('Failed to copy username', error);
+                const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
+                showToast(failMessage, 'error');
+            });
+    }
+
+    /**
      * Regenerate the preview only. Slider, number input, checkbox and radio
      * changes call this so browsing options never writes to history.
      * @returns {string} The generated username
@@ -287,16 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
             addHistoryEntry(username);
         }
 
-        navigator.clipboard.writeText(username)
-            .then(() => {
-                const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
-                showToast(message);
-            })
-            .catch((error) => {
-                console.error('Failed to copy username', error);
-                const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
-                showToast(failMessage, 'error');
-            });
+        copyToClipboard(username);
     }
 
     lengthInput.addEventListener('input', function() {
@@ -346,6 +362,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (historyList) {
         historyList.addEventListener('scroll', maybeLoadMoreOnScroll);
+    }
+
+    // Empty-state shortcut: generate right from the empty history panel.
+    const generateFromEmptyButton = document.getElementById('generate-from-empty');
+    if (generateFromEmptyButton) {
+        generateFromEmptyButton.addEventListener('click', commitUsername);
     }
 
     function applyPreset(preset) {

@@ -7,9 +7,12 @@
     const modeSelect = document.getElementById('quick-mode');
     const lengthInput = document.getElementById('quick-length');
     const languageSelect = document.getElementById('quick-language');
+    const autoCopyCheckbox = document.getElementById('quick-auto-copy');
     const generateButton = document.getElementById('quick-generate');
     const copyButton = document.getElementById('quick-copy');
     const openPageButton = document.getElementById('quick-open-page');
+
+    let copyResetTimer = null;
 
     const storage = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local)
         ? chrome.storage.local
@@ -61,9 +64,42 @@
         storage.set({
             [SETTINGS_KEY]: {
                 mode: modeSelect.value,
-                length: UsernameGenerator.clampLength(lengthInput.value)
+                length: UsernameGenerator.clampLength(lengthInput.value),
+                autoCopy: Boolean(autoCopyCheckbox && autoCopyCheckbox.checked)
             }
         });
+    }
+
+    /**
+     * Briefly turn the copy button into a confirmation tick.
+     */
+    function flashCopyButton() {
+        if (!copyButton) return;
+
+        copyButton.textContent = '✓';
+        copyButton.classList.add('is-copied');
+
+        clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(() => {
+            copyButton.textContent = t('button.copy', 'Copy Username');
+            copyButton.classList.remove('is-copied');
+        }, 1200);
+    }
+
+    /**
+     * Write the username to the clipboard and report the result.
+     * @param {string} username - Username to copy
+     */
+    function writeClipboard(username) {
+        navigator.clipboard.writeText(username)
+            .then(() => {
+                Toast.show(t('alert.copySuccess', 'Username copied to clipboard!'));
+                flashCopyButton();
+            })
+            .catch((error) => {
+                console.error('Failed to copy username', error);
+                Toast.show(t('alert.copyFailed', 'Copy failed. Please try again.'), 'error');
+            });
     }
 
     /**
@@ -72,9 +108,14 @@
      */
     function commit() {
         const username = renderPreview();
-        if (username) {
-            HistoryStore.add(storage, username);
+        if (!username) return '';
+
+        HistoryStore.add(storage, username);
+
+        if (autoCopyCheckbox && autoCopyCheckbox.checked) {
+            writeClipboard(username);
         }
+
         return username;
     }
 
@@ -86,15 +127,7 @@
         if (!username || username === '—') return;
 
         HistoryStore.add(storage, username);
-
-        navigator.clipboard.writeText(username)
-            .then(() => {
-                Toast.show(t('alert.copySuccess', 'Username copied to clipboard!'));
-            })
-            .catch((error) => {
-                console.error('Failed to copy username', error);
-                Toast.show(t('alert.copyFailed', 'Copy failed. Please try again.'), 'error');
-            });
+        writeClipboard(username);
     }
 
     /**
@@ -137,6 +170,9 @@
             if (settings && settings.length) {
                 lengthInput.value = UsernameGenerator.clampLength(settings.length);
             }
+            if (settings && autoCopyCheckbox) {
+                autoCopyCheckbox.checked = Boolean(settings.autoCopy);
+            }
             callback();
         });
     }
@@ -158,6 +194,10 @@
     copyButton.addEventListener('click', copy);
     output.addEventListener('click', copy);
 
+    if (autoCopyCheckbox) {
+        autoCopyCheckbox.addEventListener('change', saveSettings);
+    }
+
     openPageButton.addEventListener('click', () => {
         if (typeof chrome !== 'undefined' && chrome.tabs && chrome.runtime) {
             chrome.tabs.create({ url: chrome.runtime.getURL('page.html') });
@@ -167,6 +207,8 @@
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
+            // Let a focused select handle Enter itself (open/confirm the list).
+            if (event.target && event.target.tagName === 'SELECT') return;
             event.preventDefault();
             commit();
             return;
