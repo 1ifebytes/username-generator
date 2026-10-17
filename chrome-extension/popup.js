@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const generatedUsername = document.getElementById('generated-username');
     const generateButton = document.getElementById('generate-username');
     const copyButton = document.getElementById('copy-username');
+    const generateBatchButton = document.getElementById('generate-batch');
+    const batchResults = document.getElementById('batch-results');
+    const presetChips = document.getElementById('preset-chips');
     const historyList = document.getElementById('history-list');
     const emptyHistory = document.getElementById('empty-history');
     const clearHistoryButton = document.getElementById('clear-history');
@@ -29,6 +32,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const symbolsCheckbox = document.getElementById('symbols');
     let history = [];
     let visibleHistoryCount = HISTORY_BATCH_SIZE;
+    let activePresetId = null;
+
+    const BATCH_SIZE = 10;
 
     const storage = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null;
 
@@ -326,11 +332,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
-        input.addEventListener('change', previewUsername);
+        input.addEventListener('change', () => {
+            updatePresetChipState(null);
+            previewUsername();
+        });
     });
 
     generateButton.addEventListener('click', commitUsername);
     copyButton.addEventListener('click', copyUsername);
+
+    if (generateBatchButton) {
+        generateBatchButton.addEventListener('click', generateBatch);
+    }
 
     function maybeLoadMoreOnScroll() {
         if (!historyList) return;
@@ -370,8 +383,8 @@ document.addEventListener('DOMContentLoaded', function() {
         generateFromEmptyButton.addEventListener('click', commitUsername);
     }
 
-    function applyPreset(preset) {
-        switch (preset) {
+    function applyModeDefaults(mode) {
+        switch (mode) {
             case 'easyToSay':
                 uppercaseCheckbox.checked = true;
                 lowercaseCheckbox.checked = true;
@@ -403,19 +416,135 @@ document.addEventListener('DOMContentLoaded', function() {
 
     [easyToSayRadio, easyToReadRadio, allCharactersRadio].forEach(radio => {
         radio.addEventListener('change', () => {
-            if (easyToSayRadio.checked) applyPreset('easyToSay');
-            if (easyToReadRadio.checked) applyPreset('easyToRead');
-            if (allCharactersRadio.checked) applyPreset('allCharacters');
+            if (easyToSayRadio.checked) applyModeDefaults('easyToSay');
+            if (easyToReadRadio.checked) applyModeDefaults('easyToRead');
+            if (allCharactersRadio.checked) applyModeDefaults('allCharacters');
             previewUsername();
         });
     });
 
-    if (easyToSayRadio && easyToSayRadio.checked) applyPreset('easyToSay');
-    if (easyToReadRadio && easyToReadRadio.checked) applyPreset('easyToRead');
-    if (allCharactersRadio && allCharactersRadio.checked) applyPreset('allCharacters');
+    if (easyToSayRadio && easyToSayRadio.checked) applyModeDefaults('easyToSay');
+    if (easyToReadRadio && easyToReadRadio.checked) applyModeDefaults('easyToRead');
+    if (allCharactersRadio && allCharactersRadio.checked) applyModeDefaults('allCharacters');
+
+    // === Presets ===
+
+    /**
+     * Mark one preset chip as active and clear the others.
+     * @param {string|null} id - Active preset id
+     */
+    function updatePresetChipState(id) {
+        activePresetId = id;
+        if (!presetChips) return;
+
+        presetChips.querySelectorAll('.preset-chip').forEach(chip => {
+            chip.setAttribute('aria-pressed', String(chip.dataset.preset === id));
+        });
+    }
+
+    /**
+     * Build the preset chips from the Presets module.
+     */
+    function renderPresetChips() {
+        if (!presetChips || typeof Presets === 'undefined') return;
+
+        presetChips.innerHTML = '';
+        Presets.ids().forEach(id => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'preset-chip';
+            chip.dataset.preset = id;
+            chip.setAttribute('aria-pressed', String(activePresetId === id));
+            chip.textContent = typeof I18nManager !== 'undefined'
+                ? I18nManager.t(Presets.labelKey(id))
+                : id;
+            chip.title = typeof I18nManager !== 'undefined'
+                ? I18nManager.t(Presets.tooltipKey(id))
+                : '';
+            chip.addEventListener('click', () => applyNamedPreset(id));
+            presetChips.appendChild(chip);
+        });
+    }
+
+    /**
+     * Apply a named preset to the visible controls and generate once.
+     * @param {string} id - Preset id
+     */
+    function applyNamedPreset(id) {
+        const preset = typeof Presets !== 'undefined' ? Presets.get(id) : null;
+        if (!preset) return;
+
+        easyToSayRadio.checked = preset.mode === 'easyToSay';
+        easyToReadRadio.checked = preset.mode === 'easyToRead';
+        allCharactersRadio.checked = preset.mode === 'allCharacters';
+
+        // Mode defaults decide which toggles are enabled, then the preset
+        // overrides the actual selection (e.g. lowercase-only social handles).
+        applyModeDefaults(preset.mode);
+        uppercaseCheckbox.checked = preset.uppercase;
+        lowercaseCheckbox.checked = preset.lowercase;
+        numbersCheckbox.checked = preset.numbers;
+        symbolsCheckbox.checked = preset.symbols;
+
+        syncLengthInputs(preset.length);
+        updatePresetChipState(id);
+        commitUsername();
+    }
+
+    // === Batch generation ===
+
+    /**
+     * Render a grid of generated candidates. Clicking one copies it and adds
+     * it to history.
+     * @param {string[]} results - Generated usernames
+     */
+    function renderBatch(results) {
+        if (!batchResults) return;
+
+        batchResults.innerHTML = '';
+        const copyLabel = typeof I18nManager !== 'undefined'
+            ? I18nManager.t('a11y.copy')
+            : 'Copy username';
+
+        results.forEach(name => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'batch-item';
+            item.textContent = name;
+            item.setAttribute('aria-label', `${copyLabel}: ${name}`);
+            item.addEventListener('click', () => {
+                addHistoryEntry(name);
+                copyToClipboard(name);
+            });
+            batchResults.appendChild(item);
+        });
+    }
+
+    /**
+     * Generate a batch of distinct candidates for the current options.
+     */
+    function generateBatch() {
+        if (!batchResults) return;
+
+        const options = getOptions();
+        const results = [];
+        const seen = new Set();
+        const maxAttempts = BATCH_SIZE * 20;
+
+        for (let attempt = 0; attempt < maxAttempts && results.length < BATCH_SIZE; attempt++) {
+            const candidate = generateUsername(options);
+            if (!candidate || seen.has(candidate)) continue;
+            seen.add(candidate);
+            results.push(candidate);
+        }
+
+        renderBatch(results);
+    }
 
     // === Module Initialization ===
     // Order matters: i18n -> theme -> favorites -> other modules
+
+    renderPresetChips();
 
     // 1. Initialize i18n manager
     function populateLanguageSelector(selectElement) {
@@ -437,6 +566,7 @@ document.addEventListener('DOMContentLoaded', function() {
         I18nManager.init(storage, () => {
             // Saved language is known now; refresh the selector and timestamps.
             populateLanguageSelector(languageSelector);
+            renderPresetChips();
             renderHistory();
         });
 
@@ -444,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
             languageSelector.addEventListener('change', (e) => {
                 I18nManager.setLanguage(e.target.value);
                 populateLanguageSelector(languageSelector);
+                renderPresetChips();
                 // Timestamps are locale-formatted, so re-render the list.
                 renderHistory();
             });
