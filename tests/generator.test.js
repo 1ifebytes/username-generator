@@ -135,6 +135,26 @@ describe('username generator popup', () => {
         expect(document.getElementById('symbols').checked).toBe(false);
     });
 
+    test('preview changes do not write history, explicit generate does', () => {
+        bootstrapPopup();
+
+        // The initial seed writes exactly one entry.
+        expect(window.__usernameGeneratorState.history.length).toBe(1);
+
+        const lengthInput = document.getElementById('length');
+        lengthInput.value = '9';
+        lengthInput.dispatchEvent(new Event('input', { bubbles: true }));
+        lengthInput.value = '12';
+        lengthInput.dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('uppercase').click();
+
+        // Browsing options only updates the preview.
+        expect(window.__usernameGeneratorState.history.length).toBe(1);
+
+        document.getElementById('generate-username').click();
+        expect(window.__usernameGeneratorState.history.length).toBe(2);
+    });
+
     test('page HTML includes required controls', () => {
         bootstrapPopup();
 

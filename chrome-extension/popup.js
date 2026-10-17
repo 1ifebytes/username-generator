@@ -328,12 +328,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 navigator.clipboard.writeText(item.username)
                     .then(() => {
                         const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
-                        alert(message);
+                        showToast(message);
                     })
                     .catch((error) => {
                         console.error('Failed to copy username', error);
                         const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
-                        alert(failMessage);
+                        showToast(failMessage, 'error');
                     });
             });
 
@@ -383,43 +383,99 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function updateUsername(shouldPersist = true) {
+    /**
+     * Show a non-blocking toast message.
+     * @param {string} message - Text to display
+     * @param {'success'|'error'} [type] - Visual style
+     */
+    function showToast(message, type = 'success') {
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.className = 'toast';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = message;
+        toast.classList.remove('toast-visible', 'toast-error');
+        if (type === 'error') {
+            toast.classList.add('toast-error');
+        }
+
+        // Force a reflow so repeated messages restart the transition.
+        void toast.offsetWidth;
+        toast.classList.add('toast-visible');
+
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove('toast-visible');
+        }, 2000);
+    }
+
+    /**
+     * Regenerate the preview only. Slider, number input, checkbox and radio
+     * changes call this so browsing options never writes to history.
+     * @returns {string} The generated username
+     */
+    function previewUsername() {
         const options = getOptions();
         const username = generateUsername(options);
         generatedUsername.textContent = username;
-        if (shouldPersist) {
+        return username;
+    }
+
+    /**
+     * Regenerate the preview and record it in history. The Generate button,
+     * the keyboard shortcut and the copy action call this.
+     * @returns {string} The generated username
+     */
+    function commitUsername() {
+        const username = previewUsername();
+        if (username) {
             addHistoryEntry(username);
         }
+        return username;
     }
 
     function copyUsername() {
-        navigator.clipboard.writeText(generatedUsername.textContent)
+        const username = generatedUsername.textContent;
+        if (!username) return;
+
+        // A username the user actually copied is worth keeping in history.
+        if (!history.some(item => item.username === username)) {
+            addHistoryEntry(username);
+        }
+
+        navigator.clipboard.writeText(username)
             .then(() => {
                 const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
-                alert(message);
+                showToast(message);
             })
             .catch((error) => {
                 console.error('Failed to copy username', error);
                 const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
-                alert(failMessage);
+                showToast(failMessage, 'error');
             });
     }
 
     lengthInput.addEventListener('input', function() {
         syncLengthInputs(this.value);
-        updateUsername();
+        previewUsername();
     });
 
     lengthSlider.addEventListener('input', function() {
         syncLengthInputs(this.value);
-        updateUsername();
+        previewUsername();
     });
 
     document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
-        input.addEventListener('change', updateUsername);
+        input.addEventListener('change', previewUsername);
     });
 
-    generateButton.addEventListener('click', updateUsername);
+    generateButton.addEventListener('click', commitUsername);
     copyButton.addEventListener('click', copyUsername);
 
     function maybeLoadMoreOnScroll() {
@@ -432,19 +488,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    clearHistoryButton.addEventListener('click', () => {
-        history = [];
-        persistHistory(history);
-        visibleHistoryCount = HISTORY_BATCH_SIZE;
-        renderHistory();
-    });
+    // These controls only exist on the full-page view; guard so the shared
+    // script stays safe to load anywhere.
+    if (clearHistoryButton) {
+        clearHistoryButton.addEventListener('click', () => {
+            history = [];
+            persistHistory(history);
+            visibleHistoryCount = HISTORY_BATCH_SIZE;
+            renderHistory();
+        });
+    }
 
-    loadMoreHistoryButton.addEventListener('click', () => {
-        visibleHistoryCount = Math.min(history.length, visibleHistoryCount + HISTORY_BATCH_SIZE);
-        renderHistory();
-    });
+    if (loadMoreHistoryButton) {
+        loadMoreHistoryButton.addEventListener('click', () => {
+            visibleHistoryCount = Math.min(history.length, visibleHistoryCount + HISTORY_BATCH_SIZE);
+            renderHistory();
+        });
+    }
 
-    historyList.addEventListener('scroll', maybeLoadMoreOnScroll);
+    if (historyList) {
+        historyList.addEventListener('scroll', maybeLoadMoreOnScroll);
+    }
 
     function applyPreset(preset) {
         switch (preset) {
@@ -482,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (easyToSayRadio.checked) applyPreset('easyToSay');
             if (easyToReadRadio.checked) applyPreset('easyToRead');
             if (allCharactersRadio.checked) applyPreset('allCharacters');
-            updateUsername();
+            previewUsername();
         });
     });
 
@@ -503,6 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
             languageSelector.value = I18nManager.getLanguage();
             languageSelector.addEventListener('change', (e) => {
                 I18nManager.setLanguage(e.target.value);
+                // Timestamps are locale-formatted, so re-render the list.
+                renderHistory();
             });
         }
     }
@@ -536,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 5. Initialize keyboard shortcuts
     if (typeof KeyboardShortcuts !== 'undefined') {
         KeyboardShortcuts.init({
-            generate: updateUsername,
+            generate: commitUsername,
             copy: copyUsername
         });
     }
@@ -570,24 +636,30 @@ document.addEventListener('DOMContentLoaded', function() {
     storage && storage.get ? storage.get([HISTORY_KEY], (result) => {
         if (chrome.runtime && chrome.runtime.lastError) {
             console.error('Failed to load history for initial seed', chrome.runtime.lastError);
-            updateUsername(true);
+            commitUsername();
             return;
         }
         const existing = Array.isArray(result[HISTORY_KEY]) ? result[HISTORY_KEY] : [];
         if (existing.length === 0) {
-            updateUsername(true);
+            commitUsername();
         } else {
             history = existing.sort((a, b) => b.timestamp - a.timestamp);
             visibleHistoryCount = Math.min(history.length, HISTORY_BATCH_SIZE);
             renderHistory();
+            // Replace the static placeholder with a fresh preview.
+            previewUsername();
         }
-    }) : updateUsername(true);
+    }) : commitUsername();
 
     // === Expose state and helpers for inter-module communication ===
     if (typeof window !== 'undefined') {
         window.__usernameGeneratorState = {
-            history,
-            locale: typeof I18nManager !== 'undefined' ? I18nManager.getLanguage() : 'en',
+            // Getter so modules always see the current array, not the empty
+            // array captured at bootstrap time.
+            get history() {
+                return history;
+            },
+            locale: 'en-US',
             renderHistory,
             renderFilteredHistory: (filteredItems) => renderHistory(filteredItems)
         };
