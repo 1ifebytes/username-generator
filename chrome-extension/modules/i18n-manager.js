@@ -1,11 +1,23 @@
 /**
  * i18n Manager Module
- * Manages internationalization for English, Chinese, and Japanese
+ * Manages internationalization for all supported UI languages.
  */
 const I18nManager = (function() {
     const LANGUAGE_KEY = 'languagePreference';
     let currentLanguage = 'en';
     let storage = null;
+
+    // Native display names, in the order shown in the language selector.
+    const LANGUAGE_NAMES = {
+        'en': 'English',
+        'zh': '简体中文',
+        'zh-TW': '繁體中文',
+        'ja': '日本語',
+        'ko': '한국어',
+        'es': 'Español',
+        'fr': 'Français',
+        'de': 'Deutsch'
+    };
 
     // Translation dictionaries
     const translations = {
@@ -95,6 +107,49 @@ const I18nManager = (function() {
             'shortcut.generated': '已生成！',
             'shortcut.copied': '已复制！'
         },
+        'zh-TW': {
+            'app.title': '使用者名稱產生器',
+            'app.subtitle': 'Chrome 擴充功能',
+            'app.description': '自訂易讀的使用者名稱，同步長度控制，一鍵複製。',
+            'quick.moreOptions': '更多選項與歷史 →',
+            'quick.mode': '模式',
+            'quick.length': '長度',
+            'customize.title': '自訂您的使用者名稱',
+            'mode.easyToSay': '易於發音',
+            'mode.easyToRead': '易於閱讀',
+            'mode.allCharacters': '全部字元',
+            'mode.easyToSay.tooltip': '避免數字和特殊字元',
+            'mode.easyToRead.tooltip': '避免易混淆字元，如 I、l、1、O、0、S、5、B、8、Z 和 2',
+            'mode.allCharacters.tooltip': '任何字元組合，如 !、7、h、K 和 l1',
+            'char.uppercase': '大寫',
+            'char.lowercase': '小寫',
+            'char.numbers': '數字',
+            'char.symbols': '符號',
+            'length.label': '使用者名稱長度',
+            'button.generate': '產生使用者名稱',
+            'button.copy': '複製使用者名稱',
+            'history.title': '歷史記錄',
+            'history.subtitle': '最近產生的使用者名稱',
+            'history.clear': '全部清除',
+            'history.loadMore': '載入更多',
+            'history.export': '匯出 CSV',
+            'history.search': '搜尋歷史...',
+            'history.clearSearch': '清除搜尋',
+            'history.empty': '尚無使用者名稱。產生一個以開始使用。',
+            'favorites.title': '收藏',
+            'favorites.subtitle': '已儲存的使用者名稱',
+            'favorites.empty': '尚無收藏。將使用者名稱加星號以儲存。',
+            'theme.system': '跟隨系統',
+            'theme.light': '淺色',
+            'theme.dark': '深色',
+            'alert.copySuccess': '使用者名稱已複製到剪貼簿！',
+            'alert.copyFailed': '複製失敗，請再試一次。',
+            'alert.noHistory': '沒有歷史記錄可匯出。',
+            'alert.favoritesCleared': '所有收藏已清除。',
+            'confirm.clearFavorites': '確定要清除所有收藏嗎？',
+            'shortcut.generated': '已產生！',
+            'shortcut.copied': '已複製！'
+        },
         ja: {
             'app.title': 'ユーザー名生成ツール',
             'app.subtitle': 'Chrome拡張機能',
@@ -137,6 +192,178 @@ const I18nManager = (function() {
             'confirm.clearFavorites': 'すべてのお気に入りをクリアしてもよろしいですか？',
             'shortcut.generated': '生成しました！',
             'shortcut.copied': 'コピーしました！'
+        },
+        ko: {
+            'app.title': '사용자 이름 생성기',
+            'app.subtitle': 'Chrome 확장 프로그램',
+            'app.description': '읽기 쉬운 사용자 이름을 만들고 길이를 동기화하며 한 번에 복사하세요.',
+            'quick.moreOptions': '더 많은 옵션 및 기록 →',
+            'quick.mode': '모드',
+            'quick.length': '길이',
+            'customize.title': '사용자 이름 사용자 지정',
+            'mode.easyToSay': '발음하기 쉬움',
+            'mode.easyToRead': '읽기 쉬움',
+            'mode.allCharacters': '모든 문자',
+            'mode.easyToSay.tooltip': '숫자와 특수 문자를 피합니다',
+            'mode.easyToRead.tooltip': 'I, l, 1, O, 0, S, 5, B, 8, Z, 2처럼 혼동하기 쉬운 문자를 피합니다',
+            'mode.allCharacters.tooltip': '!, 7, h, K, l1 등 모든 문자 조합',
+            'char.uppercase': '대문자',
+            'char.lowercase': '소문자',
+            'char.numbers': '숫자',
+            'char.symbols': '기호',
+            'length.label': '사용자 이름 길이',
+            'button.generate': '사용자 이름 생성',
+            'button.copy': '사용자 이름 복사',
+            'history.title': '기록',
+            'history.subtitle': '최근 사용자 이름',
+            'history.clear': '모두 지우기',
+            'history.loadMore': '더 보기',
+            'history.export': 'CSV 내보내기',
+            'history.search': '기록 검색...',
+            'history.clearSearch': '검색 지우기',
+            'history.empty': '아직 사용자 이름이 없습니다. 하나 생성해 보세요.',
+            'favorites.title': '즐겨찾기',
+            'favorites.subtitle': '저장된 사용자 이름',
+            'favorites.empty': '아직 즐겨찾기가 없습니다. 별표를 눌러 저장하세요.',
+            'theme.system': '시스템',
+            'theme.light': '라이트',
+            'theme.dark': '다크',
+            'alert.copySuccess': '사용자 이름을 클립보드에 복사했습니다!',
+            'alert.copyFailed': '복사에 실패했습니다. 다시 시도하세요.',
+            'alert.noHistory': '내보낼 기록이 없습니다.',
+            'alert.favoritesCleared': '모든 즐겨찾기를 지웠습니다.',
+            'confirm.clearFavorites': '모든 즐겨찾기를 지우시겠습니까?',
+            'shortcut.generated': '생성됨!',
+            'shortcut.copied': '복사됨!'
+        },
+        es: {
+            'app.title': 'Generador de nombres de usuario',
+            'app.subtitle': 'Extensión de Chrome',
+            'app.description': 'Crea un nombre de usuario legible, sincroniza la longitud y cópialo con un clic.',
+            'quick.moreOptions': 'Más opciones e historial →',
+            'quick.mode': 'Modo',
+            'quick.length': 'Longitud',
+            'customize.title': 'Personaliza tu nombre de usuario',
+            'mode.easyToSay': 'Fácil de pronunciar',
+            'mode.easyToRead': 'Fácil de leer',
+            'mode.allCharacters': 'Todos los caracteres',
+            'mode.easyToSay.tooltip': 'Evita números y caracteres especiales',
+            'mode.easyToRead.tooltip': 'Evita caracteres ambiguos como I, l, 1, O, 0, S, 5, B, 8, Z y 2',
+            'mode.allCharacters.tooltip': 'Cualquier combinación de caracteres como !, 7, h, K y l1',
+            'char.uppercase': 'Mayúsculas',
+            'char.lowercase': 'Minúsculas',
+            'char.numbers': 'Números',
+            'char.symbols': 'Símbolos',
+            'length.label': 'Longitud del nombre',
+            'button.generate': 'Generar nombre',
+            'button.copy': 'Copiar nombre',
+            'history.title': 'Historial',
+            'history.subtitle': 'Nombres recientes',
+            'history.clear': 'Borrar todo',
+            'history.loadMore': 'Cargar más',
+            'history.export': 'Exportar CSV',
+            'history.search': 'Buscar en el historial...',
+            'history.clearSearch': 'Borrar búsqueda',
+            'history.empty': 'Aún no hay nombres. Genera uno para empezar.',
+            'favorites.title': 'Favoritos',
+            'favorites.subtitle': 'Nombres guardados',
+            'favorites.empty': 'Aún no hay favoritos. Marca un nombre para guardarlo.',
+            'theme.system': 'Sistema',
+            'theme.light': 'Claro',
+            'theme.dark': 'Oscuro',
+            'alert.copySuccess': '¡Nombre copiado al portapapeles!',
+            'alert.copyFailed': 'Error al copiar. Inténtalo de nuevo.',
+            'alert.noHistory': 'No hay historial para exportar.',
+            'alert.favoritesCleared': 'Todos los favoritos se han borrado.',
+            'confirm.clearFavorites': '¿Seguro que quieres borrar todos los favoritos?',
+            'shortcut.generated': '¡Generado!',
+            'shortcut.copied': '¡Copiado!'
+        },
+        fr: {
+            'app.title': "Générateur de noms d'utilisateur",
+            'app.subtitle': 'Extension Chrome',
+            'app.description': 'Créez un nom d’utilisateur lisible, synchronisez la longueur et copiez en un clic.',
+            'quick.moreOptions': "Plus d'options et historique →",
+            'quick.mode': 'Mode',
+            'quick.length': 'Longueur',
+            'customize.title': 'Personnalisez votre nom d’utilisateur',
+            'mode.easyToSay': 'Facile à prononcer',
+            'mode.easyToRead': 'Facile à lire',
+            'mode.allCharacters': 'Tous les caractères',
+            'mode.easyToSay.tooltip': 'Évite les chiffres et les caractères spéciaux',
+            'mode.easyToRead.tooltip': 'Évite les caractères ambigus comme I, l, 1, O, 0, S, 5, B, 8, Z et 2',
+            'mode.allCharacters.tooltip': 'Toute combinaison de caractères comme !, 7, h, K et l1',
+            'char.uppercase': 'Majuscules',
+            'char.lowercase': 'Minuscules',
+            'char.numbers': 'Chiffres',
+            'char.symbols': 'Symboles',
+            'length.label': 'Longueur du nom',
+            'button.generate': 'Générer le nom',
+            'button.copy': 'Copier le nom',
+            'history.title': 'Historique',
+            'history.subtitle': 'Noms récents',
+            'history.clear': 'Tout effacer',
+            'history.loadMore': 'Afficher plus',
+            'history.export': 'Exporter en CSV',
+            'history.search': "Rechercher dans l'historique...",
+            'history.clearSearch': 'Effacer la recherche',
+            'history.empty': "Aucun nom pour l'instant. Générez-en un pour commencer.",
+            'favorites.title': 'Favoris',
+            'favorites.subtitle': 'Noms enregistrés',
+            'favorites.empty': 'Aucun favori. Ajoutez une étoile à un nom pour l’enregistrer.',
+            'theme.system': 'Système',
+            'theme.light': 'Clair',
+            'theme.dark': 'Sombre',
+            'alert.copySuccess': 'Nom copié dans le presse-papiers !',
+            'alert.copyFailed': 'Échec de la copie. Réessayez.',
+            'alert.noHistory': 'Aucun historique à exporter.',
+            'alert.favoritesCleared': 'Tous les favoris ont été effacés.',
+            'confirm.clearFavorites': 'Voulez-vous vraiment effacer tous les favoris ?',
+            'shortcut.generated': 'Généré !',
+            'shortcut.copied': 'Copié !'
+        },
+        de: {
+            'app.title': 'Benutzernamen-Generator',
+            'app.subtitle': 'Chrome-Erweiterung',
+            'app.description': 'Erstelle einen lesbaren Benutzernamen, synchronisiere die Länge und kopiere ihn mit einem Klick.',
+            'quick.moreOptions': 'Weitere Optionen & Verlauf →',
+            'quick.mode': 'Modus',
+            'quick.length': 'Länge',
+            'customize.title': 'Benutzernamen anpassen',
+            'mode.easyToSay': 'Leicht auszusprechen',
+            'mode.easyToRead': 'Leicht zu lesen',
+            'mode.allCharacters': 'Alle Zeichen',
+            'mode.easyToSay.tooltip': 'Zahlen und Sonderzeichen vermeiden',
+            'mode.easyToRead.tooltip': 'Mehrdeutige Zeichen wie I, l, 1, O, 0, S, 5, B, 8, Z und 2 vermeiden',
+            'mode.allCharacters.tooltip': 'Beliebige Zeichenkombinationen wie !, 7, h, K und l1',
+            'char.uppercase': 'Großbuchstaben',
+            'char.lowercase': 'Kleinbuchstaben',
+            'char.numbers': 'Zahlen',
+            'char.symbols': 'Symbole',
+            'length.label': 'Länge des Benutzernamens',
+            'button.generate': 'Benutzernamen generieren',
+            'button.copy': 'Benutzernamen kopieren',
+            'history.title': 'Verlauf',
+            'history.subtitle': 'Neueste Benutzernamen',
+            'history.clear': 'Alles löschen',
+            'history.loadMore': 'Mehr laden',
+            'history.export': 'CSV exportieren',
+            'history.search': 'Verlauf durchsuchen...',
+            'history.clearSearch': 'Suche löschen',
+            'history.empty': 'Noch keine Benutzernamen. Generiere einen, um zu starten.',
+            'favorites.title': 'Favoriten',
+            'favorites.subtitle': 'Gespeicherte Benutzernamen',
+            'favorites.empty': 'Noch keine Favoriten. Markiere einen Benutzernamen mit einem Stern.',
+            'theme.system': 'System',
+            'theme.light': 'Hell',
+            'theme.dark': 'Dunkel',
+            'alert.copySuccess': 'Benutzername in die Zwischenablage kopiert!',
+            'alert.copyFailed': 'Kopieren fehlgeschlagen. Bitte erneut versuchen.',
+            'alert.noHistory': 'Kein Verlauf zum Exportieren.',
+            'alert.favoritesCleared': 'Alle Favoriten gelöscht.',
+            'confirm.clearFavorites': 'Möchtest du wirklich alle Favoriten löschen?',
+            'shortcut.generated': 'Generiert!',
+            'shortcut.copied': 'Kopiert!'
         }
     };
 
@@ -149,7 +376,12 @@ const I18nManager = (function() {
         const localeMap = {
             'en': 'en-US',
             'zh': 'zh-CN',
-            'ja': 'ja-JP'
+            'zh-TW': 'zh-TW',
+            'ja': 'ja-JP',
+            'ko': 'ko-KR',
+            'es': 'es-ES',
+            'fr': 'fr-FR',
+            'de': 'de-DE'
         };
         return localeMap[language] || 'en-US';
     }
@@ -199,7 +431,7 @@ const I18nManager = (function() {
 
         /**
          * Set the current language
-         * @param {string} language - Language code ('en', 'zh', or 'ja')
+         * @param {string} language - Language code (e.g. 'en', 'zh', 'zh-TW')
          */
         setLanguage: function(language) {
             if (!translations[language]) {
@@ -279,15 +511,24 @@ const I18nManager = (function() {
         /**
          * Get language display name
          * @param {string} code - Language code
-         * @returns {string} - Display name
+         * @returns {string} - Native display name
          */
         getLanguageName: function(code) {
-            const names = {
-                'en': 'English',
-                'zh': '中文',
-                'ja': '日本語'
-            };
-            return names[code] || code;
+            return LANGUAGE_NAMES[code] || code;
+        },
+
+        /**
+         * Check whether a language defines a translation key.
+         * Used to keep dictionaries in sync.
+         * @param {string} language - Language code
+         * @param {string} key - Translation key
+         * @returns {boolean}
+         */
+        hasTranslation: function(language, key) {
+            return Boolean(
+                translations[language] &&
+                Object.prototype.hasOwnProperty.call(translations[language], key)
+            );
         }
     };
 })();

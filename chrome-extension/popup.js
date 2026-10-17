@@ -91,17 +91,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return UsernameGenerator.generate(options);
     }
 
-    function formatTimestamp(timestamp, locale = 'en-US') {
+    /**
+     * Format a timestamp as YYYY-MM-DD HH:mm:ss in the local timezone.
+     * Locale-independent so every language shows the same stable format.
+     * @param {number} timestamp - Unix timestamp in milliseconds
+     * @returns {string} - Formatted timestamp
+     */
+    function formatTimestamp(timestamp) {
         const date = new Date(timestamp);
-        return date.toLocaleString(locale, {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).replace(/\//g, '-');
+        const pad = (value) => String(value).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+            `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     }
 
     function upsertHistory(list, entry, limit = HISTORY_LIMIT) {
@@ -125,7 +125,6 @@ document.addEventListener('DOMContentLoaded', function() {
         historyList.innerHTML = '';
         const itemsToRender = filteredItems || history.slice(0, visibleHistoryCount);
         const isFiltered = filteredItems !== null;
-        const locale = window.__usernameGeneratorState?.locale || 'en-US';
 
         if (itemsToRender.length === 0) {
             emptyHistory.style.display = 'block';
@@ -150,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const time = document.createElement('div');
             time.className = 'history-timestamp';
-            time.textContent = formatTimestamp(item.timestamp, locale);
+            time.textContent = formatTimestamp(item.timestamp);
 
             text.appendChild(name);
             text.appendChild(time);
@@ -397,15 +396,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Order matters: i18n -> theme -> favorites -> other modules
 
     // 1. Initialize i18n manager
+    function populateLanguageSelector(selectElement) {
+        if (!selectElement || typeof I18nManager === 'undefined') return;
+
+        selectElement.innerHTML = '';
+        I18nManager.getSupportedLanguages().forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = I18nManager.getLanguageName(code);
+            selectElement.appendChild(option);
+        });
+        selectElement.value = I18nManager.getLanguage();
+    }
+
     if (typeof I18nManager !== 'undefined') {
+        populateLanguageSelector(languageSelector);
+
         I18nManager.init(storage, () => {
-            // Translations loaded
+            // Saved language is known now; refresh the selector and timestamps.
+            populateLanguageSelector(languageSelector);
+            renderHistory();
         });
 
         if (languageSelector) {
-            languageSelector.value = I18nManager.getLanguage();
             languageSelector.addEventListener('change', (e) => {
                 I18nManager.setLanguage(e.target.value);
+                populateLanguageSelector(languageSelector);
                 // Timestamps are locale-formatted, so re-render the list.
                 renderHistory();
             });

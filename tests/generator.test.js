@@ -25,6 +25,7 @@ function loadModule(file, exportName) {
 loadModule('generator-core.js', 'UsernameGenerator');
 loadModule('history-store.js', 'HistoryStore');
 loadModule('toast.js', 'Toast');
+loadModule('i18n-manager.js', 'I18nManager');
 
 require('../chrome-extension/popup.js');
 
@@ -226,10 +227,8 @@ describe('username generator popup', () => {
         const { formatTimestamp } = window.__usernameGeneratorTestHelpers;
         const date = new Date(Date.UTC(2024, 4, 6, 7, 8, 9)); // May 6 2024 07:08:09 UTC
         const formatted = formatTimestamp(date.getTime());
-        // The format uses toLocaleString which varies by locale (e.g., "2024-05-06, 15:08:09")
-        // Just verify it contains date and time components
-        expect(formatted).toMatch(/\d{4}/); // Has year
-        expect(formatted).toMatch(/\d{2}:\d{2}:\d{2}/); // Has time
+        // Locale-independent, always YYYY-MM-DD HH:mm:ss in local time.
+        expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
     });
 
     test('generator core clamps length and supports all modes', () => {
@@ -281,5 +280,66 @@ describe('username generator popup', () => {
 
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith(output.textContent);
         expect(global.chrome.storage.local._data.usernameHistory[0].username).toBe(output.textContent);
+    });
+
+    test('every supported language defines all translation keys', () => {
+        const keys = [
+            'app.title', 'app.subtitle', 'app.description',
+            'quick.moreOptions', 'quick.mode', 'quick.length',
+            'customize.title',
+            'mode.easyToSay', 'mode.easyToRead', 'mode.allCharacters',
+            'mode.easyToSay.tooltip', 'mode.easyToRead.tooltip', 'mode.allCharacters.tooltip',
+            'char.uppercase', 'char.lowercase', 'char.numbers', 'char.symbols',
+            'length.label', 'button.generate', 'button.copy',
+            'history.title', 'history.subtitle', 'history.clear', 'history.loadMore',
+            'history.export', 'history.search', 'history.clearSearch', 'history.empty',
+            'favorites.title', 'favorites.subtitle', 'favorites.empty',
+            'theme.system', 'theme.light', 'theme.dark',
+            'alert.copySuccess', 'alert.copyFailed', 'alert.noHistory',
+            'alert.favoritesCleared', 'confirm.clearFavorites',
+            'shortcut.generated', 'shortcut.copied'
+        ];
+
+        const languages = I18nManager.getSupportedLanguages();
+        expect(languages).toEqual(['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de']);
+
+        languages.forEach(code => {
+            keys.forEach(key => {
+                expect(I18nManager.hasTranslation(code, key)).toBe(true);
+            });
+        });
+    });
+
+    test('language selectors list every supported language', () => {
+        bootstrapPopup();
+        const select = document.getElementById('language-selector');
+        const values = Array.from(select.options).map(option => option.value);
+        const labels = Array.from(select.options).map(option => option.textContent);
+
+        expect(values).toEqual(I18nManager.getSupportedLanguages());
+        expect(labels).toContain('繁體中文');
+        expect(labels).toContain('한국어');
+    });
+
+    test('quick popup language selector is populated', () => {
+        bootstrapQuickPopup();
+        const select = document.getElementById('quick-language');
+
+        expect(select).not.toBeNull();
+        expect(Array.from(select.options).map(option => option.value))
+            .toEqual(I18nManager.getSupportedLanguages());
+    });
+
+    test('switching language updates the UI', () => {
+        bootstrapQuickPopup();
+        const select = document.getElementById('quick-language');
+
+        select.value = 'zh-TW';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        expect(document.querySelector('.quick-title').textContent).toBe('使用者名稱產生器');
+        expect(select.options.length).toBe(I18nManager.getSupportedLanguages().length);
+
+        I18nManager.setLanguage('en');
     });
 });

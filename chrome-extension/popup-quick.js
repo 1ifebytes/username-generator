@@ -6,6 +6,7 @@
     const output = document.getElementById('quick-output');
     const modeSelect = document.getElementById('quick-mode');
     const lengthInput = document.getElementById('quick-length');
+    const languageSelect = document.getElementById('quick-language');
     const generateButton = document.getElementById('quick-generate');
     const copyButton = document.getElementById('quick-copy');
     const openPageButton = document.getElementById('quick-open-page');
@@ -97,6 +98,22 @@
     }
 
     /**
+     * Fill the language selector with every supported language.
+     */
+    function populateLanguageSelector() {
+        if (!languageSelect || typeof I18nManager === 'undefined') return;
+
+        languageSelect.innerHTML = '';
+        I18nManager.getSupportedLanguages().forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = I18nManager.getLanguageName(code);
+            languageSelect.appendChild(option);
+        });
+        languageSelect.value = I18nManager.getLanguage();
+    }
+
+    /**
      * Restore the last used mode and length.
      * @param {Function} callback - Called once preferences are applied
      */
@@ -165,7 +182,15 @@
     });
 
     if (typeof I18nManager !== 'undefined') {
-        I18nManager.init(storage);
+        populateLanguageSelector();
+        I18nManager.init(storage, populateLanguageSelector);
+
+        if (languageSelect) {
+            languageSelect.addEventListener('change', (event) => {
+                I18nManager.setLanguage(event.target.value);
+                populateLanguageSelector();
+            });
+        }
     }
     if (typeof ThemeManager !== 'undefined') {
         ThemeManager.init(storage);
