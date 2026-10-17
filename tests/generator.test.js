@@ -6,19 +6,30 @@ const fs = require('fs');
 const path = require('path');
 
 const pageHtml = fs.readFileSync(path.join(__dirname, '..', 'chrome-extension', 'page.html'), 'utf8');
+const quickHtml = fs.readFileSync(path.join(__dirname, '..', 'chrome-extension', 'popup-quick.html'), 'utf8');
+
+/**
+ * Load an IIFE browser module into the Node global scope.
+ * @param {string} file - File name under chrome-extension/modules
+ * @param {string} exportName - Name of the const exported by the module
+ */
+function loadModule(file, exportName) {
+    const source = fs.readFileSync(
+        path.join(__dirname, '..', 'chrome-extension', 'modules', file),
+        'utf8'
+    );
+    const factory = new Function(source + '\nreturn ' + exportName + ';');
+    global[exportName] = factory();
+}
+
+loadModule('generator-core.js', 'UsernameGenerator');
+loadModule('history-store.js', 'HistoryStore');
+loadModule('toast.js', 'Toast');
 
 require('../chrome-extension/popup.js');
 
-function buildDom() {
-    const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    const content = bodyMatch && bodyMatch[1] ? bodyMatch[1] : '';
-    const stripped = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-    document.body.innerHTML = stripped;
-}
-
-function bootstrapPopup() {
-    buildDom();
-    global.chrome = {
+function createStorageMock() {
+    return {
         storage: {
             local: {
                 _data: {},
@@ -30,14 +41,37 @@ function bootstrapPopup() {
                     });
                     cb(result);
                 },
-                set(items) {
+                set(items, cb) {
                     this._data = { ...this._data, ...items };
+                    if (cb) cb();
                 }
             }
         }
     };
+}
+
+function buildDom(html) {
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const content = bodyMatch && bodyMatch[1] ? bodyMatch[1] : '';
+    const stripped = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    document.body.innerHTML = stripped;
+}
+
+function bootstrapPopup() {
+    buildDom(pageHtml);
+    global.chrome = createStorageMock();
     const domLoaded = new Event('DOMContentLoaded', { bubbles: true, cancelable: true });
     document.dispatchEvent(domLoaded);
+}
+
+function bootstrapQuickPopup() {
+    buildDom(quickHtml);
+    global.chrome = createStorageMock();
+    const source = fs.readFileSync(
+        path.join(__dirname, '..', 'chrome-extension', 'popup-quick.js'),
+        'utf8'
+    );
+    new Function(source)();
 }
 
 describe('username generator popup', () => {
@@ -196,5 +230,56 @@ describe('username generator popup', () => {
         // Just verify it contains date and time components
         expect(formatted).toMatch(/\d{4}/); // Has year
         expect(formatted).toMatch(/\d{2}:\d{2}:\d{2}/); // Has time
+    });
+
+    test('generator core clamps length and supports all modes', () => {
+        expect(UsernameGenerator.clampLength('1')).toBe(3);
+        expect(UsernameGenerator.clampLength('99')).toBe(30);
+        expect(UsernameGenerator.clampLength('abc')).toBe(8);
+
+        const easyToSay = UsernameGenerator.generate({
+            length: 8, easyToSay: true, easyToRead: false, allCharacters: false,
+            uppercase: true, lowercase: true, numbers: false, symbols: false
+        });
+        expect(easyToSay).toMatch(/^[A-Za-z]{8}$/);
+
+        const allChars = UsernameGenerator.generate({
+            length: 12, easyToSay: false, easyToRead: false, allCharacters: true,
+            uppercase: true, lowercase: true, numbers: true, symbols: true
+        });
+        expect(allChars.length).toBe(12);
+    });
+
+    test('history store caps entries and dedupes', () => {
+        const list = Array.from({ length: 50 }, (_, i) => ({ username: `u${i}`, timestamp: i }));
+        const next = HistoryStore.upsert(list, { username: 'u10', timestamp: 999 }, 50);
+
+        expect(next.length).toBe(50);
+        expect(next[0]).toEqual({ username: 'u10', timestamp: 999 });
+        expect(next.filter(item => item.username === 'u10').length).toBe(1);
+    });
+
+    test('quick popup generates and records history on generate', () => {
+        bootstrapQuickPopup();
+        const output = document.getElementById('quick-output');
+
+        expect(output.textContent.length).toBeGreaterThanOrEqual(3);
+
+        document.getElementById('quick-generate').click();
+        const generated = output.textContent;
+        const stored = global.chrome.storage.local._data.usernameHistory;
+
+        expect(Array.isArray(stored)).toBe(true);
+        expect(stored[0].username).toBe(generated);
+    });
+
+    test('quick popup copies the displayed username and records it', () => {
+        bootstrapQuickPopup();
+        const output = document.getElementById('quick-output');
+
+        document.getElementById('quick-copy').click();
+
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(output.textContent);
+        expect(global.chrome.storage.local._data.usernameHistory[0].username).toBe(output.textContent);
     });
 });
