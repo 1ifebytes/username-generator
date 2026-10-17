@@ -13,6 +13,9 @@ const I18nManager = (function() {
             'app.title': 'Username Generator',
             'app.subtitle': 'Chrome Extension',
             'app.description': 'Customize a readable username, sync length controls, and copy with one click.',
+            'quick.moreOptions': 'More options & history →',
+            'quick.mode': 'Mode',
+            'quick.length': 'Length',
             'customize.title': 'Customize your username',
             'mode.easyToSay': 'Easy to say',
             'mode.easyToRead': 'Easy to read',
@@ -53,6 +56,9 @@ const I18nManager = (function() {
             'app.title': '用户名生成器',
             'app.subtitle': 'Chrome 扩展',
             'app.description': '自定义可读用户名，同步长度控制，一键复制。',
+            'quick.moreOptions': '更多选项与历史 →',
+            'quick.mode': '模式',
+            'quick.length': '长度',
             'customize.title': '自定义您的用户名',
             'mode.easyToSay': '易于发音',
             'mode.easyToRead': '易于阅读',
@@ -93,6 +99,9 @@ const I18nManager = (function() {
             'app.title': 'ユーザー名生成ツール',
             'app.subtitle': 'Chrome拡張機能',
             'app.description': '読みやすいユーザー名をカスタマイズし、長さを同期して、ワンクリックでコピー。',
+            'quick.moreOptions': 'その他のオプションと履歴 →',
+            'quick.mode': 'モード',
+            'quick.length': '長さ',
             'customize.title': 'ユーザー名をカスタマイズ',
             'mode.easyToSay': '発音しやすい',
             'mode.easyToRead': '読みやすい',
@@ -183,6 +192,7 @@ const I18nManager = (function() {
                 }
 
                 this.updateUITranslations();
+                this.updateDateLocale();
                 if (callback) callback();
             });
         },
