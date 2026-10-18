@@ -31,7 +31,9 @@
 1. 开启 GitHub Pages（`master` 的 `/docs`）→ 拿到隐私政策 URL
 2. 用 `dist/username-generator-1.2.0.zip` 上传到 Chrome Web Store 开发者后台
 3. 按 `store/CHECKLIST.md` 填写商店信息与隐私声明
-4. 审核通过后打 tag `v1.2.0`
+4. 审核通过后把商店链接写回 `README.md`
+
+若审核后需要改动，版本升为 `1.2.1`（manifest + package.json 同步）并新打 tag，不要移动 `v1.2.0`。
 
 仓库待清理：`feature/full-page-history`、`feature/ux-optimization` 已完全并入 `master`，可删除。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
@@ -86,6 +88,7 @@
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
 - **v1.2 已全部合入 `master`**（`7f4c5cf`），PR #1~#4 均为 merge commit，功能分支已删除。`develop` 已 fast-forward 到 `master`。
-- **阶段 3 上架材料完成**：打包脚本、商店文案（EN/ZH）、隐私政策页、4 张 1280×800 截图、440×280 促销图、提审清单。等待人工上传到 Chrome Web Store 后台。
+- **v1.2.0 已发布**：tag `v1.2.0` + GitHub Release。`master` = `develop` = `a0aa998`。
+- 已删除过期分支：`feature/full-page-history`、`feature/ux-optimization`；远端仅剩 `master` / `develop`。
 - **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。
