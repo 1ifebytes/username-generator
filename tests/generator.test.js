@@ -28,29 +28,42 @@ loadModule('toast.js', 'Toast');
 loadModule('i18n-manager.js', 'I18nManager');
 loadModule('presets.js', 'Presets');
 loadModule('data-portability.js', 'DataPortability');
+loadModule('sync-store.js', 'SyncStore');
 
 require('../chrome-extension/popup.js');
 
 function createStorageMock() {
     return {
         storage: {
-            local: {
-                _data: {},
-                get(keys, cb) {
-                    const keyArray = Array.isArray(keys) ? keys : [keys];
-                    const result = {};
-                    keyArray.forEach(k => {
-                        result[k] = this._data[k];
-                    });
-                    cb(result);
-                },
-                set(items, cb) {
-                    this._data = { ...this._data, ...items };
-                    if (cb) cb();
-                }
-            }
+            local: createAreaMock()
         }
     };
+}
+
+function createAreaMock(initial) {
+    const area = {
+        _data: Object.assign({}, initial || {}),
+        get(keys, cb) {
+            const keyArray = Array.isArray(keys) ? keys : [keys];
+            const result = {};
+            keyArray.forEach(k => {
+                result[k] = this._data[k];
+            });
+            cb(result);
+        },
+        set(items, cb) {
+            this._data = { ...this._data, ...items };
+            if (cb) cb();
+        },
+        remove(keys, cb) {
+            const keyArray = Array.isArray(keys) ? keys : [keys];
+            keyArray.forEach(k => {
+                delete this._data[k];
+            });
+            if (cb) cb();
+        }
+    };
+    return area;
 }
 
 function buildDom(html) {
@@ -559,5 +572,90 @@ describe('username generator popup', () => {
         expect(document.getElementById('import-data')).not.toBeNull();
         expect(document.getElementById('import-data-file')).not.toBeNull();
         expect(document.getElementById('import-data-file').getAttribute('accept')).toContain('json');
+    });
+
+    test('sync adapter merges favorites from both devices', () => {
+        const local = createAreaMock({
+            usernameFavorites: [
+                { username: 'localA', timestamp: 100 },
+                { username: 'shared', timestamp: 100 }
+            ]
+        });
+        const sync = createAreaMock({
+            usernameFavorites: [
+                { username: 'remoteB', timestamp: 200 },
+                { username: 'shared', timestamp: 300 }
+            ]
+        });
+
+        const adapter = SyncStore.create(local, sync);
+        let result = null;
+        adapter.get(['usernameFavorites'], value => { result = value; });
+
+        expect(result.usernameFavorites.map(item => item.username)).toEqual(['shared', 'remoteB', 'localA']);
+        expect(result.usernameFavorites[0].timestamp).toBe(300);
+    });
+
+    test('sync adapter prefers the synced value for preferences', () => {
+        const local = createAreaMock({ themePreference: 'light', languagePreference: 'en' });
+        const sync = createAreaMock({ themePreference: 'dark' });
+
+        const adapter = SyncStore.create(local, sync);
+        let result = null;
+        adapter.get(['themePreference', 'languagePreference'], value => { result = value; });
+
+        expect(result.themePreference).toBe('dark');
+        // Missing in sync, so the local value is used.
+        expect(result.languagePreference).toBe('en');
+    });
+
+    test('sync adapter mirrors synced keys but keeps history local', () => {
+        const local = createAreaMock();
+        const sync = createAreaMock();
+        const adapter = SyncStore.create(local, sync);
+
+        adapter.set({
+            usernameHistory: [{ username: 'h1', timestamp: 1 }],
+            themePreference: 'dark',
+            usernameFavorites: [{ username: 'f1', timestamp: 1 }]
+        });
+
+        expect(local._data.usernameHistory[0].username).toBe('h1');
+        expect(local._data.themePreference).toBe('dark');
+        expect(local._data.usernameFavorites[0].username).toBe('f1');
+
+        expect(sync._data.usernameHistory).toBeUndefined();
+        expect(sync._data.themePreference).toBe('dark');
+        expect(sync._data.usernameFavorites[0].username).toBe('f1');
+    });
+
+    test('sync adapter falls back to local-only when sync is unavailable', () => {
+        const local = createAreaMock({ themePreference: 'light' });
+        const adapter = SyncStore.create(local, null);
+
+        let result = null;
+        adapter.get(['themePreference'], value => { result = value; });
+        expect(result.themePreference).toBe('light');
+
+        adapter.set({ themePreference: 'dark' });
+        expect(local._data.themePreference).toBe('dark');
+    });
+
+    test('mergeFavorites dedupes, sorts by recency and caps the list', () => {
+        const local = [
+            ...Array.from({ length: 60 }, (_, i) => ({ username: `l${i}`, timestamp: i + 1 })),
+            { username: 'shared', timestamp: 5 }
+        ];
+        const sync = [
+            ...Array.from({ length: 60 }, (_, i) => ({ username: `s${i}`, timestamp: 1000 + i })),
+            { username: 'shared', timestamp: 5000 }
+        ];
+
+        const merged = SyncStore.mergeFavorites(local, sync);
+
+        expect(merged.length).toBe(100);
+        expect(merged[0]).toEqual({ username: 'shared', timestamp: 5000 });
+        expect(merged.filter(item => item.username === 'shared').length).toBe(1);
+        expect(merged[1].username).toBe('s59');
     });
 });

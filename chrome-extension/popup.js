@@ -39,12 +39,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const BATCH_SIZE = 10;
 
-    const storage = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null;
+    const storage = typeof SyncStore !== 'undefined'
+        ? SyncStore.createStorage()
+        : ((typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
 
     function migrateStorage() {
         if (!storage) return;
 
-        storage.get(['version'], (result) => {
+        storage.get(['version', 'themePreference', 'languagePreference', 'usernameFavorites'], (result) => {
             if (chrome.runtime && chrome.runtime.lastError) {
                 console.error('Failed to check storage version', chrome.runtime.lastError);
                 return;
@@ -53,12 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const version = result.version || 1;
 
             if (version < 2) {
-                // Migrate to v2: add new storage keys
+                // Migrate to v2 without clobbering values already synced
+                // from another device.
                 const newSettings = {
                     version: 2,
-                    themePreference: 'system',
-                    languagePreference: 'en',
-                    usernameFavorites: []
+                    themePreference: result.themePreference || 'system',
+                    languagePreference: result.languagePreference || 'en',
+                    usernameFavorites: Array.isArray(result.usernameFavorites) ? result.usernameFavorites : []
                 };
 
                 storage.set(newSettings, () => {
