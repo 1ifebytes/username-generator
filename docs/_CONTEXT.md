@@ -24,9 +24,18 @@
 4. ~~a11y：历史行可 Tab 聚焦、info 图标可聚焦、`aria-live` 避免整表重渲染。~~ ✅
 5. ~~窄屏响应式打磨（全页面 < 480px）。~~ ✅
 
-之后进入阶段 2：场景预设（Gaming / Social / Email）、批量生成、导出/导入 JSON、`chrome.storage.sync` 跨设备。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
+阶段 2 剩余项：
+1. JSON 导入/导出（历史 + 收藏）
+2. `chrome.storage.sync` 跨设备同步收藏与设置
+3. 可用性提示（“去目标平台试一下是否被占用”）
+
+之后是阶段 3：Chrome Web Store 上架材料与隐私政策。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **预设是“应用”而非“模式”**：`modules/presets.js` 只声明一组目标值（mode + length + 四个勾选），点击时先 `applyModeDefaults(mode)`，再用预设覆盖勾选，这样“社交账号=仅小写”这种组合不会被 mode 默认值冲掉。
+- **预设状态用 `aria-pressed`**：手动改动任一选项会把所有 chip 置为 `false`（`updatePresetChipState(null)`）。
+- **批量生成不自动入历史**：先生成 10 个候选，点击某个才写历史 + 复制，避免一次污染 10 条记录。
+- **全局 `box-sizing: border-box`**：`popup.css` 之前缺少该规则，导致 `input[type=number]` 的 `width:100%` 加上 padding/border 后溢出 26px。
 - **自动复制默认关闭**：用户在弹窗勾选后存入 `quickSettings.autoCopy`；只在 `Generate` 路径触发复制，预览不会。
 - **复制的无障碍入口**：历史行本身不加 `role=button`（内部有星标/删除按钮），而是把 `.history-text` 设为 `tabindex=0` + `role=button` + `aria-label`，回车/空格复制。
 - **aria-live 只在两处**：`.username-display`（新用户名）与 toast。历史/收藏列表不再整表播报。
@@ -50,9 +59,13 @@
 - **`chrome.storage` 回调必须检查 `chrome.runtime.lastError`**；`storage` 可能为 null（file:// 或普通网页）。
 - **新增语言时**：必须同时补 `translations[code]` 的全部 key、`LANGUAGE_NAMES[code]`、`getLocaleCode[code]`，否则测试会红（`hasTranslation` 校验全部 key）。
 - **`#empty-history` 现在是 `.empty-state` div**，`renderHistory` 用 `display='flex'` 而不是 `'block'`；`#empty-favorites` 仍是 `<p>`（`block`）。改样式时不要混。
+- **`applyModeDefaults` 会覆盖四个勾选**：`applyNamedPreset` 必须在它之后再覆盖勾选，顺序不能反。
+- **`batch-grid:empty { display: none }`** 让批量区域在未生成时消失，不要在 JS 里再手动 toggle display。
+- **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
 - **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
-- 当前分支 `feature/quick-ux-polish`（基于 `feature/v1.2-experience`），做阶段 1 剩余体验项。PR #1 为 `feature/v1.2-experience → master`。
+- 当前分支 `feature/presets-and-batch`（基于 `feature/quick-ux-polish`）。PR 栈：#1（v1.2 双入口）→ #2（阶段 1 收尾）→ #3（预设 + 批量）。合并顺序 1 → 2 → 3。
+- **阶段 2 第一批完成**：场景预设（Gaming / Social / Word / Strong）+ 批量生成 10 个。
 - **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。

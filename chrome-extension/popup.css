@@ -84,6 +84,10 @@
     --toast-error-text: #ffffff;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -303,6 +307,103 @@ input[type="range"] {
     background-color: var(--bg-button-secondary-hover);
     box-shadow: none;
     transform: translateY(0);
+}
+
+.button-container .tertiary {
+    background-color: var(--bg-ghost);
+    color: var(--text-on-ghost);
+    border: 1px solid var(--border-color);
+}
+
+.button-container .tertiary:hover {
+    background-color: var(--bg-ghost-hover);
+    box-shadow: none;
+    transform: translateY(0);
+}
+
+.preset-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.preset-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-muted);
+}
+
+.preset-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.preset-chip {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-container);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.preset-chip:hover {
+    border-color: var(--border-color-hover);
+    color: var(--text-primary);
+}
+
+.preset-chip:focus-visible {
+    outline: 2px solid var(--bg-button-primary);
+    outline-offset: 2px;
+}
+
+.preset-chip[aria-pressed="true"] {
+    background: var(--bg-button-primary);
+    border-color: var(--bg-button-primary);
+    color: var(--text-on-button-primary);
+    font-weight: 600;
+}
+
+.batch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.batch-grid:empty {
+    display: none;
+}
+
+.batch-item {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-history-item);
+    color: var(--text-primary);
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    word-break: break-all;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.batch-item:hover {
+    border-color: var(--border-color-hover);
+    box-shadow: var(--shadow-history-hover);
+}
+
+.batch-item:focus-visible {
+    outline: 2px solid var(--bg-button-primary);
+    outline-offset: 2px;
 }
 
 .history-section {

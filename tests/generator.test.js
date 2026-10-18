@@ -26,6 +26,7 @@ loadModule('generator-core.js', 'UsernameGenerator');
 loadModule('history-store.js', 'HistoryStore');
 loadModule('toast.js', 'Toast');
 loadModule('i18n-manager.js', 'I18nManager');
+loadModule('presets.js', 'Presets');
 
 require('../chrome-extension/popup.js');
 
@@ -288,6 +289,12 @@ describe('username generator popup', () => {
             'quick.moreOptions', 'quick.mode', 'quick.length',
             'quick.autoCopy', 'quick.hint.enter', 'quick.hint.copy',
             'history.generateOne', 'a11y.copy',
+            'preset.label',
+            'preset.gaming', 'preset.gaming.tooltip',
+            'preset.social', 'preset.social.tooltip',
+            'preset.word', 'preset.word.tooltip',
+            'preset.strong', 'preset.strong.tooltip',
+            'batch.generate',
             'customize.title',
             'mode.easyToSay', 'mode.easyToRead', 'mode.allCharacters',
             'mode.easyToSay.tooltip', 'mode.easyToRead.tooltip', 'mode.allCharacters.tooltip',
@@ -400,5 +407,97 @@ describe('username generator popup', () => {
         expect(text.getAttribute('role')).toBe('button');
         expect(text.getAttribute('aria-label')).toContain('Copy username');
         expect(document.querySelector('#history-list .history-item').getAttribute('role')).toBe('listitem');
+    });
+
+    test('preset chips render one button per preset', () => {
+        bootstrapPopup();
+
+        const chips = document.querySelectorAll('#preset-chips .preset-chip');
+        expect(chips.length).toBe(Presets.ids().length);
+        expect(Array.from(chips).map(chip => chip.dataset.preset)).toEqual(Presets.ids());
+        expect(chips[0].textContent.length).toBeGreaterThan(0);
+    });
+
+    test('strong preset selects all characters and length 16', () => {
+        bootstrapPopup();
+
+        document.querySelector('#preset-chips [data-preset="strong"]').click();
+
+        expect(document.getElementById('all-characters').checked).toBe(true);
+        expect(document.getElementById('uppercase').checked).toBe(true);
+        expect(document.getElementById('lowercase').checked).toBe(true);
+        expect(document.getElementById('numbers').checked).toBe(true);
+        expect(document.getElementById('symbols').checked).toBe(true);
+        expect(document.getElementById('length').value).toBe('16');
+        expect(document.getElementById('length-slider').value).toBe('16');
+        expect(document.querySelector('#preset-chips [data-preset="strong"]').getAttribute('aria-pressed')).toBe('true');
+    });
+
+    test('social preset is lowercase and numbers only', () => {
+        bootstrapPopup();
+
+        document.querySelector('#preset-chips [data-preset="social"]').click();
+
+        expect(document.getElementById('easy-to-read').checked).toBe(true);
+        expect(document.getElementById('uppercase').checked).toBe(false);
+        expect(document.getElementById('lowercase').checked).toBe(true);
+        expect(document.getElementById('numbers').checked).toBe(true);
+        expect(document.getElementById('symbols').checked).toBe(false);
+
+        const username = document.getElementById('generated-username').textContent;
+        expect(username).toMatch(/^[a-z0-9]+$/);
+    });
+
+    test('word preset disables numbers and symbols', () => {
+        bootstrapPopup();
+
+        document.querySelector('#preset-chips [data-preset="word"]').click();
+
+        expect(document.getElementById('easy-to-say').checked).toBe(true);
+        expect(document.getElementById('numbers').disabled).toBe(true);
+        expect(document.getElementById('symbols').disabled).toBe(true);
+
+        const username = document.getElementById('generated-username').textContent;
+        expect(username).toMatch(/^[A-Za-z]+$/);
+    });
+
+    test('switching a manual option clears the active preset', () => {
+        bootstrapPopup();
+
+        document.querySelector('#preset-chips [data-preset="strong"]').click();
+        expect(document.querySelector('#preset-chips [data-preset="strong"]').getAttribute('aria-pressed')).toBe('true');
+
+        const uppercase = document.getElementById('uppercase');
+        uppercase.checked = false;
+        uppercase.dispatchEvent(new Event('change', { bubbles: true }));
+
+        document.querySelectorAll('#preset-chips .preset-chip').forEach(chip => {
+            expect(chip.getAttribute('aria-pressed')).toBe('false');
+        });
+    });
+
+    test('batch generation produces ten distinct candidates', () => {
+        bootstrapPopup();
+
+        document.getElementById('generate-batch').click();
+
+        const items = document.querySelectorAll('#batch-results .batch-item');
+        const names = Array.from(items).map(item => item.textContent);
+
+        expect(items.length).toBe(10);
+        expect(new Set(names).size).toBe(10);
+    });
+
+    test('clicking a batch candidate copies it and records history', () => {
+        bootstrapPopup();
+        navigator.clipboard.writeText.mockClear();
+
+        document.getElementById('generate-batch').click();
+        const item = document.querySelector('#batch-results .batch-item');
+        const name = item.textContent;
+        item.click();
+
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(name);
+        expect(window.__usernameGeneratorState.history[0].username).toBe(name);
     });
 });

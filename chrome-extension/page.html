@@ -36,6 +36,10 @@
                 <span id="generated-username">c0lISTES</span>
             </div>
             <h2 data-i18n="customize.title">Customize your username</h2>
+            <div class="preset-row">
+                <span class="preset-label" id="preset-label" data-i18n="preset.label">Quick presets</span>
+                <div class="preset-chips" role="group" aria-labelledby="preset-label" id="preset-chips"></div>
+            </div>
             <div class="options-container">
                 <div class="options-column">
                     <div class="option">
@@ -90,7 +94,10 @@
             <div class="button-container">
                 <button id="generate-username" data-i18n="button.generate">Generate Username</button>
                 <button id="copy-username" class="secondary" data-i18n="button.copy">Copy Username</button>
+                <button id="generate-batch" class="tertiary" data-i18n="batch.generate">Generate 10</button>
             </div>
+
+            <div class="batch-grid" id="batch-results"></div>
 
             <!-- History Section -->
             <section class="history-section">
@@ -140,6 +147,7 @@
     <script src="modules/generator-core.js"></script>
     <script src="modules/history-store.js"></script>
     <script src="modules/toast.js"></script>
+    <script src="modules/presets.js"></script>
     <script src="modules/favorites-manager.js"></script>
     <script src="modules/keyboard-shortcuts.js"></script>
     <script src="modules/history-filter.js"></script>
