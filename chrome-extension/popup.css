@@ -223,7 +223,8 @@ input[type="checkbox"]:disabled + label {
     transition: background-color 200ms ease;
 }
 
-.info-icon:hover::after {
+.info-icon:hover::after,
+.info-icon:focus-visible::after {
     content: attr(title);
     position: absolute;
     left: 100%;
@@ -381,6 +382,12 @@ input[type="range"] {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    border-radius: 6px;
+}
+
+.history-text:focus-visible {
+    outline: 2px solid var(--bg-button-primary);
+    outline-offset: 3px;
 }
 
 .history-username {
@@ -455,6 +462,45 @@ input[type="range"] {
 .empty-history {
     margin: 0;
     color: var(--text-muted);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-history-list);
+}
+
+.empty-state .empty-history-text {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.inline-action {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    background: var(--bg-container);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.inline-action:hover {
+    background: var(--bg-ghost-hover);
+    border-color: var(--border-color-hover);
+}
+
+.inline-action:focus-visible {
+    outline: 2px solid var(--bg-button-primary);
+    outline-offset: 2px;
 }
 
 /* History search styles */
@@ -553,5 +599,33 @@ input[type="range"] {
 
     #generated-username {
         font-size: 22px;
+    }
+
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .history-actions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 16px 10px 32px;
+    }
+
+    .options-container {
+        grid-template-columns: 1fr;
+    }
+
+    .button-container button {
+        flex: 1 1 100%;
+    }
+
+    .history-search {
+        flex-wrap: wrap;
     }
 }

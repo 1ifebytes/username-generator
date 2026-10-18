@@ -286,6 +286,8 @@ describe('username generator popup', () => {
         const keys = [
             'app.title', 'app.subtitle', 'app.description',
             'quick.moreOptions', 'quick.mode', 'quick.length',
+            'quick.autoCopy', 'quick.hint.enter', 'quick.hint.copy',
+            'history.generateOne', 'a11y.copy',
             'customize.title',
             'mode.easyToSay', 'mode.easyToRead', 'mode.allCharacters',
             'mode.easyToSay.tooltip', 'mode.easyToRead.tooltip', 'mode.allCharacters.tooltip',
@@ -341,5 +343,62 @@ describe('username generator popup', () => {
         expect(select.options.length).toBe(I18nManager.getSupportedLanguages().length);
 
         I18nManager.setLanguage('en');
+    });
+
+    test('auto-copy copies right after generating when enabled', async () => {
+        bootstrapQuickPopup();
+        navigator.clipboard.writeText.mockClear();
+
+        const toggle = document.getElementById('quick-auto-copy');
+        expect(toggle.checked).toBe(false);
+
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event('change', { bubbles: true }));
+
+        document.getElementById('quick-generate').click();
+        await Promise.resolve();
+
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+            document.getElementById('quick-output').textContent
+        );
+    });
+
+    test('auto-copy stays off by default', async () => {
+        bootstrapQuickPopup();
+        navigator.clipboard.writeText.mockClear();
+
+        document.getElementById('quick-generate').click();
+        await Promise.resolve();
+
+        expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+    });
+
+    test('empty history offers a generate shortcut', () => {
+        bootstrapPopup();
+
+        // Clear the seeded entry so the empty state shows.
+        document.getElementById('clear-history').click();
+
+        const emptyState = document.getElementById('empty-history');
+        const action = document.getElementById('generate-from-empty');
+
+        expect(emptyState.style.display).toBe('flex');
+        expect(action).not.toBeNull();
+
+        const before = window.__usernameGeneratorState.history.length;
+        action.click();
+
+        expect(window.__usernameGeneratorState.history.length).toBe(before + 1);
+    });
+
+    test('history rows expose a keyboard-focusable copy target', () => {
+        bootstrapPopup();
+
+        const text = document.querySelector('#history-list .history-item .history-text');
+        expect(text).not.toBeNull();
+        expect(text.getAttribute('tabindex')).toBe('0');
+        expect(text.getAttribute('role')).toBe('button');
+        expect(text.getAttribute('aria-label')).toContain('Copy username');
+        expect(document.querySelector('#history-list .history-item').getAttribute('role')).toBe('listitem');
     });
 });

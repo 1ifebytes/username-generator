@@ -183,6 +183,41 @@ body {
     background: var(--secondary-hover);
 }
 
+.quick-actions .secondary.is-copied {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.quick-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.quick-toggle input {
+    margin: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.quick-hints {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.quick-hint-sep {
+    opacity: 0.5;
+}
+
 .link-button {
     padding: 6px;
     border: none;

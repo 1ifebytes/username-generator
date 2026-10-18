@@ -18,15 +18,19 @@
 
 ## Next Steps
 阶段 1 剩余项（按优先级）：
-1. “生成即复制”开关（默认关闭），复制后按钮短暂变为 ✓。
-2. 弹窗内显示快捷键提示（Enter 生成 / Ctrl+C 复制）。
-3. 空状态引导（历史/收藏各带行动按钮）。
-4. a11y：历史行可 Tab 聚焦、info 图标可聚焦、`aria-live` 避免整表重渲染。
-5. 窄屏响应式打磨（全页面 < 480px）。
+1. ~~“生成即复制”开关（默认关闭），复制后按钮短暂变为 ✓。~~ ✅
+2. ~~弹窗内显示快捷键提示（Enter 生成 / Ctrl+C 复制）。~~ ✅
+3. ~~空状态引导（历史/收藏各带行动按钮）。~~ ✅（历史空状态带 “Generate one”）
+4. ~~a11y：历史行可 Tab 聚焦、info 图标可聚焦、`aria-live` 避免整表重渲染。~~ ✅
+5. ~~窄屏响应式打磨（全页面 < 480px）。~~ ✅
 
 之后进入阶段 2：场景预设（Gaming / Social / Email）、批量生成、导出/导入 JSON、`chrome.storage.sync` 跨设备。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **自动复制默认关闭**：用户在弹窗勾选后存入 `quickSettings.autoCopy`；只在 `Generate` 路径触发复制，预览不会。
+- **复制的无障碍入口**：历史行本身不加 `role=button`（内部有星标/删除按钮），而是把 `.history-text` 设为 `tabindex=0` + `role=button` + `aria-label`，回车/空格复制。
+- **aria-live 只在两处**：`.username-display`（新用户名）与 toast。历史/收藏列表不再整表播报。
+- **空状态抽成 `.empty-state` 容器**：文字 + 行动按钮，`renderHistory` 用 `display:flex/none` 切换。
 - **默认 popup + 全页面链接**：`manifest.action.default_popup` 指向 `popup-quick.html`；全页面通过 `chrome.tabs.create(chrome.runtime.getURL('page.html'))` 打开。`tabs.create` 不需要额外权限。
 - **共享核心**：生成逻辑在 `modules/generator-core.js`（`UsernameGenerator`），历史读写在 `modules/history-store.js`（`HistoryStore`），提示在 `modules/toast.js`（`Toast`）。弹窗与全页面复用，避免复制粘贴。
 - **预览 vs 提交**：`previewUsername()` 只改显示；`commitUsername()` 才写历史。滑条/输入/勾选/单选只预览；Generate、Ctrl+G、Copy 才落库。
@@ -45,7 +49,10 @@
 - **`easyToSay` 下 numbers/symbols 被 preset 禁用** 是刻意行为。
 - **`chrome.storage` 回调必须检查 `chrome.runtime.lastError`**；`storage` 可能为 null（file:// 或普通网页）。
 - **新增语言时**：必须同时补 `translations[code]` 的全部 key、`LANGUAGE_NAMES[code]`、`getLocaleCode[code]`，否则测试会红（`hasTranslation` 校验全部 key）。
+- **`#empty-history` 现在是 `.empty-state` div**，`renderHistory` 用 `display='flex'` 而不是 `'block'`；`#empty-favorites` 仍是 `<p>`（`block`）。改样式时不要混。
+- **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
-- 当前工作在 `feature/v1.2-experience` 分支，基于 `origin/master`（`1871d7d`）；8 个提交尚未 push。本地 `master` 已复位到 `origin/master`。
+- 当前分支 `feature/quick-ux-polish`（基于 `feature/v1.2-experience`），做阶段 1 剩余体验项。PR #1 为 `feature/v1.2-experience → master`。
+- **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。
