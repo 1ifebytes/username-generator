@@ -26,6 +26,18 @@ Full-page username generator (Manifest V3) for Chrome. Build pronounceable or re
 3. Click “More options & history →” for the full page with history, favorites, search, CSV export, theme and language.
 4. On the full page, manage history: scroll or “Load more”, delete a single entry, or “Clear all”.
 
+**Development**
+```bash
+npm install
+npm test          # Jest suites (38 tests)
+npm run package   # builds dist/username-generator-<version>.zip
+```
+
+**Publishing**
+Store copy, screenshots, privacy policy, and the full submission checklist live in
+[`store/CHECKLIST.md`](store/CHECKLIST.md). The privacy policy is at
+[`docs/privacy.html`](docs/privacy.html).
+
 **Contributing**  
 PRs welcome.
 
@@ -59,6 +71,15 @@ MIT
 
 **贡献**  
 欢迎提交 PR。
+
+**开发与打包**
+```bash
+npm install
+npm test          # Jest 单测（38 个）
+npm run package   # 生成 dist/username-generator-<version>.zip
+```
+
+上架文案、截图、隐私政策与完整提审清单见 [`store/CHECKLIST.md`](store/CHECKLIST.md)。
 
 **许可证**  
 MIT

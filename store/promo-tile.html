@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Username Generator — promo tile</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            width: 440px;
+            height: 280px;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+            padding: 34px 32px;
+            background: linear-gradient(135deg, #1f6feb 0%, #6d3bf5 55%, #b23bd8 100%);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand img {
+            width: 52px;
+            height: 52px;
+            border-radius: 13px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 27px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            line-height: 1.15;
+        }
+
+        .tagline {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .sample {
+            align-self: flex-start;
+            padding: 11px 20px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+        }
+
+        .pills {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.86;
+        }
+
+        .pills span {
+            padding: 5px 11px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.32);
+        }
+    </style>
+</head>
+<body>
+    <div class="brand">
+        <img src="../chrome-extension/icons/icon48.png" alt="">
+        <h1>Username<br>Generator</h1>
+    </div>
+    <p class="tagline">Readable names in one click</p>
+    <div class="sample">kabozuRe</div>
+    <div class="pills">
+        <span>8 languages</span>
+        <span>Offline</span>
+        <span>No tracking</span>
+    </div>
+</body>
+</html>
