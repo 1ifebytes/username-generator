@@ -28,9 +28,12 @@
 1. `chrome.storage.sync` 跨设备同步收藏与设置
 2. 可用性提示（“去目标平台试一下是否被占用”）
 
-之后是阶段 3：Chrome Web Store 上架材料与隐私政策。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
+之后是阶段 3：Chrome Web Store 上架材料与隐私政策。
+
+仓库待清理：`feature/full-page-history`、`feature/ux-optimization` 已完全并入 `master`，可删除。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **堆叠 PR 必须用 merge commit 合并**：squash/rebase 会让子分支重新出现父分支的提交。合并顺序必须是栈底→栈顶，且每次合并后先把下一个 PR 的 base 手动改成 `master`，否则删掉 base 分支会让子 PR 被 GitHub 自动关闭。
 - **导入采用“并集 + 最新时间戳”**：按 username 去重，timestamp 新者胜，然后降序排序并截断到 50（`DataPortability.merge`）。不会覆盖本地数据。
 - **导出格式带 `app` 标识**：`{ app: 'username-generator', version: 2, exportedAt, history, favorites }`，解析时校验 app，防止误导入无关 JSON。
 - **缺失 timestamp 回退为 now()**：导入旧格式或手写 JSON 时仍能工作（代价是该条会排到最前）。
@@ -68,7 +71,7 @@
 - **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
-- 当前分支 `feature/data-portability`（基于 `feature/presets-and-batch`）。PR 栈：#1 → #2 → #3 → #4。
-- **阶段 2 第二批完成**：JSON 导入/导出（历史 + 收藏），并顺手修了收藏卡片硬编码英文 “Favorited”。
+- **v1.2 已全部合入 `master`**（`7f4c5cf`），PR #1~#4 均为 merge commit，功能分支已删除。`develop` 已 fast-forward 到 `master`。
+- 阶段 0、阶段 1、阶段 2（预设/批量、JSON 导入导出）全部完成。
 - **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。
