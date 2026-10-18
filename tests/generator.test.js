@@ -27,6 +27,7 @@ loadModule('history-store.js', 'HistoryStore');
 loadModule('toast.js', 'Toast');
 loadModule('i18n-manager.js', 'I18nManager');
 loadModule('presets.js', 'Presets');
+loadModule('data-portability.js', 'DataPortability');
 
 require('../chrome-extension/popup.js');
 
@@ -295,6 +296,8 @@ describe('username generator popup', () => {
             'preset.word', 'preset.word.tooltip',
             'preset.strong', 'preset.strong.tooltip',
             'batch.generate',
+            'history.exportJson', 'history.importJson',
+            'alert.importSuccess', 'alert.importFailed', 'alert.exportSuccess',
             'customize.title',
             'mode.easyToSay', 'mode.easyToRead', 'mode.allCharacters',
             'mode.easyToSay.tooltip', 'mode.easyToRead.tooltip', 'mode.allCharacters.tooltip',
@@ -302,7 +305,7 @@ describe('username generator popup', () => {
             'length.label', 'button.generate', 'button.copy',
             'history.title', 'history.subtitle', 'history.clear', 'history.loadMore',
             'history.export', 'history.search', 'history.clearSearch', 'history.empty',
-            'favorites.title', 'favorites.subtitle', 'favorites.empty',
+            'favorites.title', 'favorites.subtitle', 'favorites.empty', 'favorites.favorited',
             'theme.system', 'theme.light', 'theme.dark',
             'alert.copySuccess', 'alert.copyFailed', 'alert.noHistory',
             'alert.favoritesCleared', 'confirm.clearFavorites',
@@ -499,5 +502,62 @@ describe('username generator popup', () => {
 
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith(name);
         expect(window.__usernameGeneratorState.history[0].username).toBe(name);
+    });
+
+    test('export payload survives a serialize/parse roundtrip', () => {
+        const history = [
+            { username: 'alpha', timestamp: 1000 },
+            { username: 'beta', timestamp: 2000 }
+        ];
+        const favorites = [{ username: 'beta', timestamp: 3000 }];
+
+        const parsed = DataPortability.parse(DataPortability.serialize(history, favorites));
+
+        expect(parsed.history).toEqual([
+            { username: 'beta', timestamp: 2000 },
+            { username: 'alpha', timestamp: 1000 }
+        ]);
+        expect(parsed.favorites).toEqual([{ username: 'beta', timestamp: 3000 }]);
+    });
+
+    test('parse rejects non-JSON and unrelated files', () => {
+        expect(() => DataPortability.parse('not json')).toThrow(/valid JSON/);
+        expect(() => DataPortability.parse('{"foo":1}')).toThrow(/no history or favorites/);
+        expect(() => DataPortability.parse('{"app":"other","history":[]}')).toThrow(/different app/);
+    });
+
+    test('normalizeList drops invalid entries and keeps the newest duplicate', () => {
+        const list = DataPortability.normalizeList([
+            { username: 'dup', timestamp: 100 },
+            { username: 'dup', timestamp: 900 },
+            { username: '', timestamp: 500 },
+            null,
+            { username: 'solo' }
+        ]);
+
+        expect(list.map(item => item.username).sort()).toEqual(['dup', 'solo']);
+        expect(list.find(item => item.username === 'dup').timestamp).toBe(900);
+        // Entries without a timestamp fall back to now().
+        expect(list.find(item => item.username === 'solo').timestamp).toBeGreaterThan(0);
+    });
+
+    test('merge cannot exceed the history limit', () => {
+        const current = Array.from({ length: 40 }, (_, i) => ({ username: `cur-${i}`, timestamp: i + 1 }));
+        const incoming = Array.from({ length: 40 }, (_, i) => ({ username: `new-${i}`, timestamp: 1000 + i }));
+
+        const merged = DataPortability.merge(current, incoming, 50);
+
+        expect(merged.length).toBe(50);
+        expect(merged[0].username).toBe('new-39');
+        expect(merged.some(item => item.username === 'cur-0')).toBe(false);
+    });
+
+    test('page HTML exposes JSON export and import controls', () => {
+        bootstrapPopup();
+
+        expect(document.getElementById('export-data')).not.toBeNull();
+        expect(document.getElementById('import-data')).not.toBeNull();
+        expect(document.getElementById('import-data-file')).not.toBeNull();
+        expect(document.getElementById('import-data-file').getAttribute('accept')).toContain('json');
     });
 });

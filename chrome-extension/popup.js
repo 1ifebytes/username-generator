@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearHistoryButton = document.getElementById('clear-history');
     const loadMoreHistoryButton = document.getElementById('load-more-history');
     const exportHistoryButton = document.getElementById('export-history');
+    const exportDataButton = document.getElementById('export-data');
+    const importDataButton = document.getElementById('import-data');
+    const importDataFile = document.getElementById('import-data-file');
     const historySearchInput = document.getElementById('history-search');
     const clearSearchButton = document.getElementById('clear-search');
     const themeSelector = document.getElementById('theme-selector');
@@ -263,6 +266,22 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function showToast(message, type = 'success') {
         Toast.show(message, type);
+    }
+
+    /**
+     * Translate a key and fill {placeholders}.
+     * @param {string} key - i18n key
+     * @param {Object} [vars] - Placeholder values
+     * @returns {string} - Localised text
+     */
+    function translate(key, vars) {
+        let text = typeof I18nManager !== 'undefined' ? I18nManager.t(key) : key;
+        if (vars) {
+            Object.keys(vars).forEach(name => {
+                text = text.split(`{${name}}`).join(String(vars[name]));
+            });
+        }
+        return text;
     }
 
     /**
@@ -636,6 +655,71 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof HistoryFilter !== 'undefined') {
                 HistoryFilter.clear();
             }
+        });
+    }
+
+    // Export history + favorites to a JSON file
+    if (exportDataButton && typeof DataPortability !== 'undefined') {
+        exportDataButton.addEventListener('click', () => {
+            const favorites = typeof FavoritesManager !== 'undefined'
+                ? FavoritesManager.getFavorites()
+                : [];
+
+            DataPortability.download(
+                DataPortability.defaultFilename(),
+                DataPortability.serialize(history, favorites)
+            );
+
+            showToast(translate('alert.exportSuccess', { count: history.length }));
+        });
+    }
+
+    // Import a previously exported JSON file and merge it in
+    if (importDataButton && importDataFile && typeof DataPortability !== 'undefined') {
+        importDataButton.addEventListener('click', () => importDataFile.click());
+
+        importDataFile.addEventListener('change', () => {
+            const file = importDataFile.files && importDataFile.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                try {
+                    const parsed = DataPortability.parse(String(reader.result));
+                    const knownNames = new Set(history.map(item => item.username));
+                    const addedCount = parsed.history.filter(item => !knownNames.has(item.username)).length;
+
+                    const mergedHistory = DataPortability.merge(history, parsed.history, HISTORY_LIMIT);
+                    const mergedFavorites = DataPortability.merge(
+                        typeof FavoritesManager !== 'undefined' ? FavoritesManager.getFavorites() : [],
+                        parsed.favorites
+                    );
+
+                    visibleHistoryCount = Math.max(HISTORY_BATCH_SIZE, Math.min(mergedHistory.length, HISTORY_BATCH_SIZE));
+                    persistHistory(mergedHistory);
+
+                    if (typeof FavoritesManager !== 'undefined') {
+                        FavoritesManager.setFavorites(mergedFavorites);
+                    }
+                    if (typeof HistoryFilter !== 'undefined') {
+                        HistoryFilter.updateHistory(mergedHistory);
+                    }
+
+                    renderHistory();
+                    showToast(translate('alert.importSuccess', { count: addedCount }));
+                } catch (error) {
+                    console.error('Failed to import data', error);
+                    showToast(translate('alert.importFailed', { reason: error.message }), 'error');
+                }
+            };
+
+            reader.onerror = () => {
+                showToast(translate('alert.importFailed', { reason: 'read error' }), 'error');
+            };
+
+            reader.readAsText(file);
+            importDataFile.value = '';
         });
     }
 

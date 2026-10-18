@@ -25,13 +25,15 @@
 5. ~~窄屏响应式打磨（全页面 < 480px）。~~ ✅
 
 阶段 2 剩余项：
-1. JSON 导入/导出（历史 + 收藏）
-2. `chrome.storage.sync` 跨设备同步收藏与设置
-3. 可用性提示（“去目标平台试一下是否被占用”）
+1. `chrome.storage.sync` 跨设备同步收藏与设置
+2. 可用性提示（“去目标平台试一下是否被占用”）
 
 之后是阶段 3：Chrome Web Store 上架材料与隐私政策。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **导入采用“并集 + 最新时间戳”**：按 username 去重，timestamp 新者胜，然后降序排序并截断到 50（`DataPortability.merge`）。不会覆盖本地数据。
+- **导出格式带 `app` 标识**：`{ app: 'username-generator', version: 2, exportedAt, history, favorites }`，解析时校验 app，防止误导入无关 JSON。
+- **缺失 timestamp 回退为 now()**：导入旧格式或手写 JSON 时仍能工作（代价是该条会排到最前）。
 - **预设是“应用”而非“模式”**：`modules/presets.js` 只声明一组目标值（mode + length + 四个勾选），点击时先 `applyModeDefaults(mode)`，再用预设覆盖勾选，这样“社交账号=仅小写”这种组合不会被 mode 默认值冲掉。
 - **预设状态用 `aria-pressed`**：手动改动任一选项会把所有 chip 置为 `false`（`updatePresetChipState(null)`）。
 - **批量生成不自动入历史**：先生成 10 个候选，点击某个才写历史 + 复制，避免一次污染 10 条记录。
@@ -59,13 +61,14 @@
 - **`chrome.storage` 回调必须检查 `chrome.runtime.lastError`**；`storage` 可能为 null（file:// 或普通网页）。
 - **新增语言时**：必须同时补 `translations[code]` 的全部 key、`LANGUAGE_NAMES[code]`、`getLocaleCode[code]`，否则测试会红（`hasTranslation` 校验全部 key）。
 - **`#empty-history` 现在是 `.empty-state` div**，`renderHistory` 用 `display='flex'` 而不是 `'block'`；`#empty-favorites` 仍是 `<p>`（`block`）。改样式时不要混。
+- **模块是 `const` 全局词法绑定，不是 `window` 属性**：浏览器里 `FavoritesManager` 可用但 `window.FavoritesManager` 是 `undefined`。调试/自动化时直接写裸名。
 - **`applyModeDefaults` 会覆盖四个勾选**：`applyNamedPreset` 必须在它之后再覆盖勾选，顺序不能反。
 - **`batch-grid:empty { display: none }`** 让批量区域在未生成时消失，不要在 JS 里再手动 toggle display。
 - **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
 - **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
-- 当前分支 `feature/presets-and-batch`（基于 `feature/quick-ux-polish`）。PR 栈：#1（v1.2 双入口）→ #2（阶段 1 收尾）→ #3（预设 + 批量）。合并顺序 1 → 2 → 3。
-- **阶段 2 第一批完成**：场景预设（Gaming / Social / Word / Strong）+ 批量生成 10 个。
+- 当前分支 `feature/data-portability`（基于 `feature/presets-and-batch`）。PR 栈：#1 → #2 → #3 → #4。
+- **阶段 2 第二批完成**：JSON 导入/导出（历史 + 收藏），并顺手修了收藏卡片硬编码英文 “Favorited”。
 - **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。
