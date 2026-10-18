@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Username Generator</title>
+    <link rel="stylesheet" href="popup-quick.css">
+</head>
+<body>
+    <main class="quick">
+        <header class="quick-header">
+            <img src="icons/icon32.png" alt="" class="quick-icon" aria-hidden="true">
+            <h1 class="quick-title" data-i18n="app.title">Username Generator</h1>
+            <select id="quick-language" class="quick-language" aria-label="Select language"></select>
+        </header>
+
+        <div class="quick-output" id="quick-output" role="status" aria-live="polite" title="Click to copy">—</div>
+
+        <div class="quick-controls">
+            <label class="quick-field">
+                <span class="quick-label" data-i18n="quick.mode">Mode</span>
+                <select id="quick-mode">
+                    <option value="easyToSay" data-i18n="mode.easyToSay">Easy to say</option>
+                    <option value="easyToRead" data-i18n="mode.easyToRead">Easy to read</option>
+                    <option value="allCharacters" data-i18n="mode.allCharacters">All characters</option>
+                </select>
+            </label>
+            <label class="quick-field quick-field-length">
+                <span class="quick-label" data-i18n="quick.length">Length</span>
+                <input type="number" id="quick-length" min="3" max="30" value="8" inputmode="numeric">
+            </label>
+        </div>
+
+        <div class="quick-actions">
+            <button id="quick-generate" class="primary" data-i18n="button.generate">Generate</button>
+            <button id="quick-copy" class="secondary" data-i18n="button.copy">Copy</button>
+        </div>
+
+        <button id="quick-open-page" class="link-button" data-i18n="quick.moreOptions">More options &amp; history →</button>
+    </main>
+
+    <script src="modules/i18n-manager.js"></script>
+    <script src="modules/theme-manager.js"></script>
+    <script src="modules/generator-core.js"></script>
+    <script src="modules/history-store.js"></script>
+    <script src="modules/toast.js"></script>
+    <script src="popup-quick.js"></script>
+</body>
+</html>

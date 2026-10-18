@@ -1,5 +1,5 @@
 # Username Generator Chrome Extension  
-English | 中文 | 粵語
+English | 简体中文 | 繁體中文 | 日本語 | 한국어 | Español | Français | Deutsch
 
 ## English
 **Description**  
@@ -10,7 +10,8 @@ Full-page username generator (Manifest V3) for Chrome. Build pronounceable or re
 - Modes: Easy to say (consonant/vowel alternating), Easy to read (ambiguous chars removed), All characters
 - Toggles: uppercase, lowercase, numbers, symbols
 - History (local): up to 50 items in `chrome.storage.local`, timestamps (YYYY-MM-DD HH:mm:ss, local), lazy load, click-to-copy, delete single, clear all
-- Opens in a new tab (`chrome-extension/page.html`); clipboard feedback with alerts
+- Quick toolbar popup for one-click generate/copy, plus a full page (`chrome-extension/page.html`) for history and favorites; non-blocking toast feedback
+- UI languages: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Français, Deutsch
 
 **Installation**
 1. Download/clone the repo.
@@ -18,10 +19,10 @@ Full-page username generator (Manifest V3) for Chrome. Build pronounceable or re
 3. Click “Load unpacked” and select the `chrome-extension/` directory.
 
 **Usage**
-1. Click the extension icon (opens the full-page UI).  
-2. Pick mode (Easy to say / Easy to read / All characters) and toggles (uppercase/lowercase/numbers/symbols); set length.  
-3. Click “Generate Username”; click “Copy Username” or click a history item to copy.  
-4. Manage history: scroll or “Load more”, delete a single entry, or “Clear all”.
+1. Click the extension icon to open the quick popup.  
+2. Pick a mode and length, then click “Generate Username” and “Copy Username”.  
+3. Click “More options & history →” for the full page with history, favorites, search, CSV export, theme and language.
+4. On the full page, manage history: scroll or “Load more”, delete a single entry, or “Clear all”.
 
 **Contributing**  
 PRs welcome.
@@ -38,7 +39,8 @@ MIT
 - 模式：易于发音（辅音/元音交替）、易于阅读（移除易混淆字符）、全部字符
 - 选项：可选大写/小写/数字/符号
 - 历史（本地）：`chrome.storage.local` 保存最多 50 条，时间戳 YYYY-MM-DD HH:mm:ss（本地时区），懒加载，点击复制，单条删除与清空
-- 点击扩展图标打开新标签页（`chrome-extension/page.html`），复制有提示
+- 工具栏轻量弹窗一键生成/复制；全页面（`chrome-extension/page.html`）承载历史与收藏；非阻塞 toast 提示
+- 界面语言：English、简体中文、繁體中文、日本語、한국어、Español、Français、Deutsch
 
 **安装**
 1. 下载/克隆本仓库。
@@ -46,10 +48,10 @@ MIT
 3. 点击“加载已解压的扩展程序”，选择 `chrome-extension/` 目录。
 
 **使用**
-1. 点击扩展图标（打开全页面 UI）。
-2. 选择模式（易于发音/易于阅读/全部字符），勾选字符类型，设置长度。
-3. 点“Generate Username”生成；点“Copy Username”或点击历史项复制。
-4. 历史管理：滚动或“Load more”查看更多，支持单条删除与清空。
+1. 点击扩展图标打开轻量弹窗。
+2. 选择模式与长度，点“生成用户名”和“复制用户名”。
+3. 点“更多选项与历史 →”进入全页面，可管理历史、收藏、搜索、导出 CSV、切换主题与语言。
+4. 在全页面中：滚动或“加载更多”，支持单条删除与清空。
 
 **贡献**  
 欢迎提交 PR。
@@ -66,7 +68,8 @@ Chrome 全頁版用戶名產生器（MV3），快速生出易講或易讀嘅用�
 - 模式：易講（子音/母音交替）、易讀（移除易混字符）、全部字符
 - 選項：大細階、數字、符號任揀
 - 歷史（本地）：`chrome.storage.local` 最多 50 條，時間戳 YYYY-MM-DD HH:mm:ss（本地時區），懶加載，點擊可複製，支援刪單條/清空
-- 點擊擴充圖示會開新分頁（`chrome-extension/page.html`），複製有提示
+- 工具列輕量彈窗一鍵生成/複製；全頁面（`chrome-extension/page.html`）承載歷史同收藏；非阻塞 toast 提示
+- 介面語言：English、简体中文、繁體中文、日本語、한국어、Español、Français、Deutsch
 
 **安裝**
 1. 下載/clone 倉庫。
@@ -74,10 +77,10 @@ Chrome 全頁版用戶名產生器（MV3），快速生出易講或易讀嘅用�
 3. 撳「Load unpacked」，揀 `chrome-extension/` 目錄。
 
 **使用**
-1. 撳擴充圖示（打開全頁 UI）。
-2. 揀模式（易講/易讀/全部字符），選字符類型，設定長度。
-3. 撳「Generate Username」生成；撳「Copy Username」或點歷史項複製。
-4. 歷史管理：滾動或「Load more」，可刪單條或清空。
+1. 撳擴充圖示打開輕量彈窗。
+2. 揀模式同長度，撳「生成用戶名」同「複製用戶名」。
+3. 撳「更多選項與歷史 →」入全頁面，可管理歷史、收藏、搜尋、匯出 CSV、切換主題同語言。
+4. 在全頁面：滾動或「載入更多」，可刪單條或清空。
 
 **貢獻**  
 歡迎 PR。

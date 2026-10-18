@@ -1,13 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
-    const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const NUMBERS = '0123456789';
-    const SYMBOLS = '!@#$%^&*()';
-    const VOWELS = 'aeiou';
-    const CONSONANTS = 'bcdfghjklmnpqrstvwxyz';
-    const AMBIGUOUS_PATTERN = /[Il1O0S5B8Z2]/g;
-    const HISTORY_KEY = 'usernameHistory';
-    const HISTORY_LIMIT = 50;
+    const HISTORY_KEY = HistoryStore.HISTORY_KEY;
+    const HISTORY_LIMIT = HistoryStore.HISTORY_LIMIT;
     const HISTORY_BATCH_SIZE = 10;
     const CURRENT_VERSION = 2;
 
@@ -71,9 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     migrateStorage();
 
     function clampLength(value) {
-        const parsed = parseInt(value, 10);
-        const safeValue = Number.isNaN(parsed) ? 8 : parsed;
-        return Math.min(30, Math.max(3, safeValue));
+        return UsernameGenerator.clampLength(value);
     }
 
     function syncLengthInputs(value) {
@@ -96,154 +87,25 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    function getRandomIndex(max) {
-        if (window.crypto && window.crypto.getRandomValues) {
-            const buffer = new Uint32Array(1);
-            window.crypto.getRandomValues(buffer);
-            return buffer[0] % max;
-        }
-
-        return Math.floor(Math.random() * max);
-    }
-
-    function pickChar(characters) {
-        return characters.charAt(getRandomIndex(characters.length));
-    }
-
-    function buildCharacterSets(options) {
-        const sets = {
-            lowercase: LOWERCASE,
-            uppercase: UPPERCASE,
-            numbers: NUMBERS,
-            symbols: SYMBOLS
-        };
-
-        if (options.easyToRead) {
-            sets.lowercase = sets.lowercase.replace(AMBIGUOUS_PATTERN, '');
-            sets.uppercase = sets.uppercase.replace(AMBIGUOUS_PATTERN, '');
-            sets.numbers = sets.numbers.replace(AMBIGUOUS_PATTERN, '');
-        }
-
-        return sets;
-    }
-
-    function buildPronounceableSets(options) {
-        let vowels = (options.lowercase ? VOWELS : '') + (options.uppercase ? VOWELS.toUpperCase() : '');
-        let consonants = (options.lowercase ? CONSONANTS : '') + (options.uppercase ? CONSONANTS.toUpperCase() : '');
-
-        if (!vowels && !consonants) {
-            if (lowercaseCheckbox) lowercaseCheckbox.checked = true;
-            vowels = VOWELS;
-            consonants = CONSONANTS;
-        }
-
-        return { vowels, consonants };
-    }
-
-    function generatePronounceableUsername(length, options) {
-        const { vowels, consonants } = buildPronounceableSets(options);
-        const base = [];
-        const hasVowels = vowels.length > 0;
-        const hasConsonants = consonants.length > 0;
-
-        if (!hasVowels && !hasConsonants) {
-            return '';
-        }
-
-        const useConsonantFirst = hasConsonants;
-        for (let i = 0; i < length; i++) {
-            const useConsonant = (i % 2 === 0) ? useConsonantFirst : !useConsonantFirst;
-            if (useConsonant && hasConsonants) {
-                base.push(pickChar(consonants));
-            } else if (hasVowels) {
-                base.push(pickChar(vowels));
-            } else {
-                base.push(pickChar(consonants));
-            }
-        }
-
-        return base.join('');
-    }
-
-    function resolveSelectedCategories(options, sets) {
-        const baseSelection = {
-            lowercase: options.easyToSay || options.easyToRead || options.allCharacters,
-            uppercase: options.easyToSay || options.easyToRead || options.allCharacters,
-            numbers: options.easyToRead || options.allCharacters,
-            symbols: options.allCharacters
-        };
-
-        const selection = {
-            lowercase: baseSelection.lowercase && options.lowercase,
-            uppercase: baseSelection.uppercase && options.uppercase,
-            numbers: baseSelection.numbers && options.numbers,
-            symbols: baseSelection.symbols && options.symbols
-        };
-
-        const selectedKeys = Object.keys(selection).filter(key => selection[key] && sets[key].length > 0);
-
-        if (selectedKeys.length === 0) {
-            document.getElementById('lowercase').checked = true;
-            return ['lowercase'];
-        }
-
-        const maxEnforced = Math.max(1, Math.min(selectedKeys.length, clampLength(lengthInput.value)));
-        return selectedKeys.slice(0, maxEnforced);
-    }
-
-    function shuffleArray(list) {
-        for (let i = list.length - 1; i > 0; i--) {
-            const j = getRandomIndex(i + 1);
-            [list[i], list[j]] = [list[j], list[i]];
-        }
-
-        return list;
-    }
-
     function generateUsername(options) {
-        const length = clampLength(options.length);
-
-        if (options.easyToSay) {
-            return generatePronounceableUsername(length, options);
-        }
-
-        const characterSets = buildCharacterSets(options);
-        const selectedCategories = resolveSelectedCategories(options, characterSets);
-        const allCharacters = selectedCategories.map(category => characterSets[category]).join('');
-
-        if (!allCharacters.length) {
-            return '';
-        }
-
-        const requiredChars = selectedCategories.map(category => pickChar(characterSets[category]));
-        const usernameChars = requiredChars.slice(0, length);
-
-        for (let i = usernameChars.length; i < length; i++) {
-            usernameChars.push(pickChar(allCharacters));
-        }
-
-        shuffleArray(usernameChars);
-        return usernameChars.join('');
+        return UsernameGenerator.generate(options);
     }
 
-    function formatTimestamp(timestamp, locale = 'en-US') {
+    /**
+     * Format a timestamp as YYYY-MM-DD HH:mm:ss in the local timezone.
+     * Locale-independent so every language shows the same stable format.
+     * @param {number} timestamp - Unix timestamp in milliseconds
+     * @returns {string} - Formatted timestamp
+     */
+    function formatTimestamp(timestamp) {
         const date = new Date(timestamp);
-        return date.toLocaleString(locale, {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).replace(/\//g, '-');
+        const pad = (value) => String(value).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+            `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     }
 
     function upsertHistory(list, entry, limit = HISTORY_LIMIT) {
-        const filtered = list.filter(item => item.username !== entry.username);
-        filtered.unshift(entry);
-        filtered.sort((a, b) => b.timestamp - a.timestamp);
-        return filtered.slice(0, limit);
+        return HistoryStore.upsert(list, entry, limit);
     }
 
     function persistHistory(updatedHistory) {
@@ -263,7 +125,6 @@ document.addEventListener('DOMContentLoaded', function() {
         historyList.innerHTML = '';
         const itemsToRender = filteredItems || history.slice(0, visibleHistoryCount);
         const isFiltered = filteredItems !== null;
-        const locale = window.__usernameGeneratorState?.locale || 'en-US';
 
         if (itemsToRender.length === 0) {
             emptyHistory.style.display = 'block';
@@ -288,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const time = document.createElement('div');
             time.className = 'history-timestamp';
-            time.textContent = formatTimestamp(item.timestamp, locale);
+            time.textContent = formatTimestamp(item.timestamp);
 
             text.appendChild(name);
             text.appendChild(time);
@@ -328,12 +189,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 navigator.clipboard.writeText(item.username)
                     .then(() => {
                         const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
-                        alert(message);
+                        showToast(message);
                     })
                     .catch((error) => {
                         console.error('Failed to copy username', error);
                         const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
-                        alert(failMessage);
+                        showToast(failMessage, 'error');
                     });
             });
 
@@ -383,43 +244,76 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function updateUsername(shouldPersist = true) {
+    /**
+     * Show a non-blocking toast message.
+     * @param {string} message - Text to display
+     * @param {'success'|'error'} [type] - Visual style
+     */
+    function showToast(message, type = 'success') {
+        Toast.show(message, type);
+    }
+
+    /**
+     * Regenerate the preview only. Slider, number input, checkbox and radio
+     * changes call this so browsing options never writes to history.
+     * @returns {string} The generated username
+     */
+    function previewUsername() {
         const options = getOptions();
         const username = generateUsername(options);
         generatedUsername.textContent = username;
-        if (shouldPersist) {
+        return username;
+    }
+
+    /**
+     * Regenerate the preview and record it in history. The Generate button,
+     * the keyboard shortcut and the copy action call this.
+     * @returns {string} The generated username
+     */
+    function commitUsername() {
+        const username = previewUsername();
+        if (username) {
             addHistoryEntry(username);
         }
+        return username;
     }
 
     function copyUsername() {
-        navigator.clipboard.writeText(generatedUsername.textContent)
+        const username = generatedUsername.textContent;
+        if (!username) return;
+
+        // A username the user actually copied is worth keeping in history.
+        if (!history.some(item => item.username === username)) {
+            addHistoryEntry(username);
+        }
+
+        navigator.clipboard.writeText(username)
             .then(() => {
                 const message = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copySuccess') : 'Username copied to clipboard!';
-                alert(message);
+                showToast(message);
             })
             .catch((error) => {
                 console.error('Failed to copy username', error);
                 const failMessage = typeof I18nManager !== 'undefined' ? I18nManager.t('alert.copyFailed') : 'Copy failed. Please try again.';
-                alert(failMessage);
+                showToast(failMessage, 'error');
             });
     }
 
     lengthInput.addEventListener('input', function() {
         syncLengthInputs(this.value);
-        updateUsername();
+        previewUsername();
     });
 
     lengthSlider.addEventListener('input', function() {
         syncLengthInputs(this.value);
-        updateUsername();
+        previewUsername();
     });
 
     document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
-        input.addEventListener('change', updateUsername);
+        input.addEventListener('change', previewUsername);
     });
 
-    generateButton.addEventListener('click', updateUsername);
+    generateButton.addEventListener('click', commitUsername);
     copyButton.addEventListener('click', copyUsername);
 
     function maybeLoadMoreOnScroll() {
@@ -432,19 +326,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    clearHistoryButton.addEventListener('click', () => {
-        history = [];
-        persistHistory(history);
-        visibleHistoryCount = HISTORY_BATCH_SIZE;
-        renderHistory();
-    });
+    // These controls only exist on the full-page view; guard so the shared
+    // script stays safe to load anywhere.
+    if (clearHistoryButton) {
+        clearHistoryButton.addEventListener('click', () => {
+            history = [];
+            persistHistory(history);
+            visibleHistoryCount = HISTORY_BATCH_SIZE;
+            renderHistory();
+        });
+    }
 
-    loadMoreHistoryButton.addEventListener('click', () => {
-        visibleHistoryCount = Math.min(history.length, visibleHistoryCount + HISTORY_BATCH_SIZE);
-        renderHistory();
-    });
+    if (loadMoreHistoryButton) {
+        loadMoreHistoryButton.addEventListener('click', () => {
+            visibleHistoryCount = Math.min(history.length, visibleHistoryCount + HISTORY_BATCH_SIZE);
+            renderHistory();
+        });
+    }
 
-    historyList.addEventListener('scroll', maybeLoadMoreOnScroll);
+    if (historyList) {
+        historyList.addEventListener('scroll', maybeLoadMoreOnScroll);
+    }
 
     function applyPreset(preset) {
         switch (preset) {
@@ -482,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (easyToSayRadio.checked) applyPreset('easyToSay');
             if (easyToReadRadio.checked) applyPreset('easyToRead');
             if (allCharactersRadio.checked) applyPreset('allCharacters');
-            updateUsername();
+            previewUsername();
         });
     });
 
@@ -494,15 +396,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Order matters: i18n -> theme -> favorites -> other modules
 
     // 1. Initialize i18n manager
+    function populateLanguageSelector(selectElement) {
+        if (!selectElement || typeof I18nManager === 'undefined') return;
+
+        selectElement.innerHTML = '';
+        I18nManager.getSupportedLanguages().forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = I18nManager.getLanguageName(code);
+            selectElement.appendChild(option);
+        });
+        selectElement.value = I18nManager.getLanguage();
+    }
+
     if (typeof I18nManager !== 'undefined') {
+        populateLanguageSelector(languageSelector);
+
         I18nManager.init(storage, () => {
-            // Translations loaded
+            // Saved language is known now; refresh the selector and timestamps.
+            populateLanguageSelector(languageSelector);
+            renderHistory();
         });
 
         if (languageSelector) {
-            languageSelector.value = I18nManager.getLanguage();
             languageSelector.addEventListener('change', (e) => {
                 I18nManager.setLanguage(e.target.value);
+                populateLanguageSelector(languageSelector);
+                // Timestamps are locale-formatted, so re-render the list.
+                renderHistory();
             });
         }
     }
@@ -536,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 5. Initialize keyboard shortcuts
     if (typeof KeyboardShortcuts !== 'undefined') {
         KeyboardShortcuts.init({
-            generate: updateUsername,
+            generate: commitUsername,
             copy: copyUsername
         });
     }
@@ -570,24 +491,30 @@ document.addEventListener('DOMContentLoaded', function() {
     storage && storage.get ? storage.get([HISTORY_KEY], (result) => {
         if (chrome.runtime && chrome.runtime.lastError) {
             console.error('Failed to load history for initial seed', chrome.runtime.lastError);
-            updateUsername(true);
+            commitUsername();
             return;
         }
         const existing = Array.isArray(result[HISTORY_KEY]) ? result[HISTORY_KEY] : [];
         if (existing.length === 0) {
-            updateUsername(true);
+            commitUsername();
         } else {
             history = existing.sort((a, b) => b.timestamp - a.timestamp);
             visibleHistoryCount = Math.min(history.length, HISTORY_BATCH_SIZE);
             renderHistory();
+            // Replace the static placeholder with a fresh preview.
+            previewUsername();
         }
-    }) : updateUsername(true);
+    }) : commitUsername();
 
     // === Expose state and helpers for inter-module communication ===
     if (typeof window !== 'undefined') {
         window.__usernameGeneratorState = {
-            history,
-            locale: typeof I18nManager !== 'undefined' ? I18nManager.getLanguage() : 'en',
+            // Getter so modules always see the current array, not the empty
+            // array captured at bootstrap time.
+            get history() {
+                return history;
+            },
+            locale: 'en-US',
             renderHistory,
             renderFilteredHistory: (filteredItems) => renderHistory(filteredItems)
         };

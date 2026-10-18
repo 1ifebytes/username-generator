@@ -26,19 +26,24 @@ This is a Manifest V3 Chrome extension for generating usernames. All source file
 ```
 chrome-extension/
 ├── manifest.json          # MV3 manifest - register all scripts/pages here
-├── background.js          # Service worker for extension lifecycle
-├── page.html              # Full-page UI (opened in new tab)
-├── popup.html             # Popup UI (alternative entry point)
-├── popup.js               # Core logic and DOM event handlers
-├── popup.css              # Styles with CSS variables for theming
-├── icon.png               # Extension icon
+├── popup-quick.html       # Lightweight toolbar popup (default_popup)
+├── popup-quick.js         # Quick generate/copy logic
+├── popup-quick.css        # Compact popup styles
+├── page.html              # Full-page UI with history & favorites
+├── popup.js               # Full-page logic and DOM event handlers
+├── popup.css              # Full-page styles with CSS variables
+├── icon.png               # 128px icon (16/32/48 live in icons/)
+├── icons/                 # Toolbar icon sizes
 └── modules/               # Feature modules (IIFE pattern)
     ├── csv-exporter.js
     ├── favorites-manager.js
+    ├── generator-core.js
     ├── history-filter.js
+    ├── history-store.js
     ├── i18n-manager.js
     ├── keyboard-shortcuts.js
-    └── theme-manager.js
+    ├── theme-manager.js
+    └── toast.js
 ```
 
 **Key principles:**
@@ -70,12 +75,14 @@ npm test -- --coverage
 # Package extension for distribution
 zip -r dist/usernameGenerator.zip \
   chrome-extension/manifest.json \
-  chrome-extension/background.js \
+  chrome-extension/popup-quick.html \
+  chrome-extension/popup-quick.js \
+  chrome-extension/popup-quick.css \
   chrome-extension/page.html \
-  chrome-extension/popup.html \
   chrome-extension/popup.js \
   chrome-extension/popup.css \
   chrome-extension/icon.png \
+  chrome-extension/icons/ \
   chrome-extension/modules/
 ```
 

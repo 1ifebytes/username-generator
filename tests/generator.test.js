@@ -6,19 +6,31 @@ const fs = require('fs');
 const path = require('path');
 
 const pageHtml = fs.readFileSync(path.join(__dirname, '..', 'chrome-extension', 'page.html'), 'utf8');
+const quickHtml = fs.readFileSync(path.join(__dirname, '..', 'chrome-extension', 'popup-quick.html'), 'utf8');
+
+/**
+ * Load an IIFE browser module into the Node global scope.
+ * @param {string} file - File name under chrome-extension/modules
+ * @param {string} exportName - Name of the const exported by the module
+ */
+function loadModule(file, exportName) {
+    const source = fs.readFileSync(
+        path.join(__dirname, '..', 'chrome-extension', 'modules', file),
+        'utf8'
+    );
+    const factory = new Function(source + '\nreturn ' + exportName + ';');
+    global[exportName] = factory();
+}
+
+loadModule('generator-core.js', 'UsernameGenerator');
+loadModule('history-store.js', 'HistoryStore');
+loadModule('toast.js', 'Toast');
+loadModule('i18n-manager.js', 'I18nManager');
 
 require('../chrome-extension/popup.js');
 
-function buildDom() {
-    const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    const content = bodyMatch && bodyMatch[1] ? bodyMatch[1] : '';
-    const stripped = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-    document.body.innerHTML = stripped;
-}
-
-function bootstrapPopup() {
-    buildDom();
-    global.chrome = {
+function createStorageMock() {
+    return {
         storage: {
             local: {
                 _data: {},
@@ -30,14 +42,37 @@ function bootstrapPopup() {
                     });
                     cb(result);
                 },
-                set(items) {
+                set(items, cb) {
                     this._data = { ...this._data, ...items };
+                    if (cb) cb();
                 }
             }
         }
     };
+}
+
+function buildDom(html) {
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const content = bodyMatch && bodyMatch[1] ? bodyMatch[1] : '';
+    const stripped = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    document.body.innerHTML = stripped;
+}
+
+function bootstrapPopup() {
+    buildDom(pageHtml);
+    global.chrome = createStorageMock();
     const domLoaded = new Event('DOMContentLoaded', { bubbles: true, cancelable: true });
     document.dispatchEvent(domLoaded);
+}
+
+function bootstrapQuickPopup() {
+    buildDom(quickHtml);
+    global.chrome = createStorageMock();
+    const source = fs.readFileSync(
+        path.join(__dirname, '..', 'chrome-extension', 'popup-quick.js'),
+        'utf8'
+    );
+    new Function(source)();
 }
 
 describe('username generator popup', () => {
@@ -135,6 +170,26 @@ describe('username generator popup', () => {
         expect(document.getElementById('symbols').checked).toBe(false);
     });
 
+    test('preview changes do not write history, explicit generate does', () => {
+        bootstrapPopup();
+
+        // The initial seed writes exactly one entry.
+        expect(window.__usernameGeneratorState.history.length).toBe(1);
+
+        const lengthInput = document.getElementById('length');
+        lengthInput.value = '9';
+        lengthInput.dispatchEvent(new Event('input', { bubbles: true }));
+        lengthInput.value = '12';
+        lengthInput.dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('uppercase').click();
+
+        // Browsing options only updates the preview.
+        expect(window.__usernameGeneratorState.history.length).toBe(1);
+
+        document.getElementById('generate-username').click();
+        expect(window.__usernameGeneratorState.history.length).toBe(2);
+    });
+
     test('page HTML includes required controls', () => {
         bootstrapPopup();
 
@@ -172,9 +227,119 @@ describe('username generator popup', () => {
         const { formatTimestamp } = window.__usernameGeneratorTestHelpers;
         const date = new Date(Date.UTC(2024, 4, 6, 7, 8, 9)); // May 6 2024 07:08:09 UTC
         const formatted = formatTimestamp(date.getTime());
-        // The format uses toLocaleString which varies by locale (e.g., "2024-05-06, 15:08:09")
-        // Just verify it contains date and time components
-        expect(formatted).toMatch(/\d{4}/); // Has year
-        expect(formatted).toMatch(/\d{2}:\d{2}:\d{2}/); // Has time
+        // Locale-independent, always YYYY-MM-DD HH:mm:ss in local time.
+        expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    });
+
+    test('generator core clamps length and supports all modes', () => {
+        expect(UsernameGenerator.clampLength('1')).toBe(3);
+        expect(UsernameGenerator.clampLength('99')).toBe(30);
+        expect(UsernameGenerator.clampLength('abc')).toBe(8);
+
+        const easyToSay = UsernameGenerator.generate({
+            length: 8, easyToSay: true, easyToRead: false, allCharacters: false,
+            uppercase: true, lowercase: true, numbers: false, symbols: false
+        });
+        expect(easyToSay).toMatch(/^[A-Za-z]{8}$/);
+
+        const allChars = UsernameGenerator.generate({
+            length: 12, easyToSay: false, easyToRead: false, allCharacters: true,
+            uppercase: true, lowercase: true, numbers: true, symbols: true
+        });
+        expect(allChars.length).toBe(12);
+    });
+
+    test('history store caps entries and dedupes', () => {
+        const list = Array.from({ length: 50 }, (_, i) => ({ username: `u${i}`, timestamp: i }));
+        const next = HistoryStore.upsert(list, { username: 'u10', timestamp: 999 }, 50);
+
+        expect(next.length).toBe(50);
+        expect(next[0]).toEqual({ username: 'u10', timestamp: 999 });
+        expect(next.filter(item => item.username === 'u10').length).toBe(1);
+    });
+
+    test('quick popup generates and records history on generate', () => {
+        bootstrapQuickPopup();
+        const output = document.getElementById('quick-output');
+
+        expect(output.textContent.length).toBeGreaterThanOrEqual(3);
+
+        document.getElementById('quick-generate').click();
+        const generated = output.textContent;
+        const stored = global.chrome.storage.local._data.usernameHistory;
+
+        expect(Array.isArray(stored)).toBe(true);
+        expect(stored[0].username).toBe(generated);
+    });
+
+    test('quick popup copies the displayed username and records it', () => {
+        bootstrapQuickPopup();
+        const output = document.getElementById('quick-output');
+
+        document.getElementById('quick-copy').click();
+
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(output.textContent);
+        expect(global.chrome.storage.local._data.usernameHistory[0].username).toBe(output.textContent);
+    });
+
+    test('every supported language defines all translation keys', () => {
+        const keys = [
+            'app.title', 'app.subtitle', 'app.description',
+            'quick.moreOptions', 'quick.mode', 'quick.length',
+            'customize.title',
+            'mode.easyToSay', 'mode.easyToRead', 'mode.allCharacters',
+            'mode.easyToSay.tooltip', 'mode.easyToRead.tooltip', 'mode.allCharacters.tooltip',
+            'char.uppercase', 'char.lowercase', 'char.numbers', 'char.symbols',
+            'length.label', 'button.generate', 'button.copy',
+            'history.title', 'history.subtitle', 'history.clear', 'history.loadMore',
+            'history.export', 'history.search', 'history.clearSearch', 'history.empty',
+            'favorites.title', 'favorites.subtitle', 'favorites.empty',
+            'theme.system', 'theme.light', 'theme.dark',
+            'alert.copySuccess', 'alert.copyFailed', 'alert.noHistory',
+            'alert.favoritesCleared', 'confirm.clearFavorites',
+            'shortcut.generated', 'shortcut.copied'
+        ];
+
+        const languages = I18nManager.getSupportedLanguages();
+        expect(languages).toEqual(['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de']);
+
+        languages.forEach(code => {
+            keys.forEach(key => {
+                expect(I18nManager.hasTranslation(code, key)).toBe(true);
+            });
+        });
+    });
+
+    test('language selectors list every supported language', () => {
+        bootstrapPopup();
+        const select = document.getElementById('language-selector');
+        const values = Array.from(select.options).map(option => option.value);
+        const labels = Array.from(select.options).map(option => option.textContent);
+
+        expect(values).toEqual(I18nManager.getSupportedLanguages());
+        expect(labels).toContain('繁體中文');
+        expect(labels).toContain('한국어');
+    });
+
+    test('quick popup language selector is populated', () => {
+        bootstrapQuickPopup();
+        const select = document.getElementById('quick-language');
+
+        expect(select).not.toBeNull();
+        expect(Array.from(select.options).map(option => option.value))
+            .toEqual(I18nManager.getSupportedLanguages());
+    });
+
+    test('switching language updates the UI', () => {
+        bootstrapQuickPopup();
+        const select = document.getElementById('quick-language');
+
+        select.value = 'zh-TW';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        expect(document.querySelector('.quick-title').textContent).toBe('使用者名稱產生器');
+        expect(select.options.length).toBe(I18nManager.getSupportedLanguages().length);
+
+        I18nManager.setLanguage('en');
     });
 });
