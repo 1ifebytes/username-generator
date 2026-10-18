@@ -427,6 +427,7 @@ input[type="range"] {
 .history-actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .history-actions .ghost {

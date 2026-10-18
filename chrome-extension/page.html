@@ -110,6 +110,9 @@
                         <button id="clear-history" class="ghost" data-i18n="history.clear">Clear all</button>
                         <button id="load-more-history" class="ghost" data-i18n="history.loadMore">Load more</button>
                         <button id="export-history" class="ghost" data-i18n="history.export">Export CSV</button>
+                        <button id="export-data" class="ghost" data-i18n="history.exportJson">Export JSON</button>
+                        <button id="import-data" class="ghost" data-i18n="history.importJson">Import JSON</button>
+                        <input type="file" id="import-data-file" accept="application/json,.json" hidden>
                     </div>
                 </div>
                 <div class="history-search">
@@ -148,6 +151,7 @@
     <script src="modules/history-store.js"></script>
     <script src="modules/toast.js"></script>
     <script src="modules/presets.js"></script>
+    <script src="modules/data-portability.js"></script>
     <script src="modules/favorites-manager.js"></script>
     <script src="modules/keyboard-shortcuts.js"></script>
     <script src="modules/history-filter.js"></script>

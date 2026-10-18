@@ -128,6 +128,20 @@ const FavoritesManager = (function() {
         },
 
         /**
+         * Replace the whole favorites list (used by data import).
+         * @param {Array} list - New favorite items
+         */
+        setFavorites: function(list) {
+            favorites = Array.isArray(list) ? list.slice() : [];
+            persistFavorites();
+            this.renderFavorites();
+
+            if (window.__usernameGeneratorState && window.__usernameGeneratorState.renderHistory) {
+                window.__usernameGeneratorState.renderHistory();
+            }
+        },
+
+        /**
          * Render favorites to the DOM
          */
         renderFavorites: function() {
@@ -170,7 +184,9 @@ const FavoritesManager = (function() {
 
             const time = document.createElement('div');
             time.className = 'history-timestamp';
-            time.textContent = 'Favorited';
+            time.textContent = typeof I18nManager !== 'undefined'
+                ? I18nManager.t('favorites.favorited')
+                : 'Favorited';
 
             text.appendChild(name);
             text.appendChild(time);
