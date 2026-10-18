@@ -35,7 +35,7 @@ npm run package   # builds dist/username-generator-<version>.zip
 
 **Publishing**
 Store copy, screenshots, and the full submission checklist live in
-[`store/CHECKLIST.md`](store/CHECKLIST.md).
+[`store/checklist.html`](store/checklist.html).
 
 Privacy policy: <https://1ifebytes.github.io/username-generator/privacy.html>
 (source: [`docs/privacy.html`](docs/privacy.html))
@@ -81,7 +81,7 @@ npm test          # Jest 单测（38 个）
 npm run package   # 生成 dist/username-generator-<version>.zip
 ```
 
-上架文案、截图与完整提审清单见 [`store/CHECKLIST.md`](store/CHECKLIST.md)。
+上架文案、截图与完整提审清单见 [`store/checklist.html`](store/checklist.html)。
 
 隐私政策：<https://1ifebytes.github.io/username-generator/privacy.html>
 

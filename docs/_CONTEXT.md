@@ -32,7 +32,7 @@
   `https://1ifebytes.github.io/username-generator/privacy.html`
 - ✅ `docs/_config.yml` 已排除内部文档，只有 `privacy.html` 对外（其余返回 404）
 - ⬜ 用 `dist/username-generator-1.2.0.zip` 上传到 Chrome Web Store 开发者后台
-- ⬜ 按 `store/CHECKLIST.md` 填写商店信息与隐私声明
+- ⬜ 按 `store/checklist.html` 填写商店信息与隐私声明
 - ⬜ 审核通过后把商店链接写回 `README.md`
 
 若审核后需要改动，版本升为 `1.2.1`（manifest + package.json 同步）并新打 tag，不要移动 `v1.2.0`。
@@ -41,6 +41,7 @@
 
 ## Technical Decisions
 - **Pages 源固定为 `master` + `/docs`**：`docs/_config.yml` 用 `exclude` 屏蔽 `_CONTEXT.md`/`PRD.md`/`iOS-App-Analysis.md`；新增文档时记得同步排除，否则会被公开。
+- **提审清单是 HTML 而非 Markdown**：`store/checklist.html` 自带样式、可勾选清单（localStorage 持久化）与代码复制按钮，直接双击即可在浏览器查看；`store/CHECKLIST.md` 已删除。
 - **打包只包含运行时文件**：`scripts/package.sh` 显式列文件，排除 `test.html` 与 docs；打包前用 Node 校验 manifest 引用的所有资源都存在。
 - **截图可复现**：截图通过 `python3 -m http.server` + 无头浏览器注入 `chrome.storage` mock 生成，seed 数据由 URL query 驱动，不依赖真实扩展环境。
 - **同步用适配器而不用改模块**：`modules/sync-store.js` 提供与 `chrome.storage.local` 同形的 `get/set/remove`，`popup.js` 与 `popup-quick.js` 只把 `storage` 换成 `SyncStore.createStorage()`，I18n/Theme/Favorites/quickSettings 无需改动。

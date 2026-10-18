@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chrome Web Store submission checklist — Username Generator 1.2.0</title>
+<style>
+    :root {
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #1f2933;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --accent: #1f6feb;
+        --accent-soft: #eaf1ff;
+        --done: #16a34a;
+        --done-soft: #e8f7ee;
+        --warn: #b45309;
+        --warn-soft: #fff5e6;
+        --code-bg: #f3f4f6;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #0f172a;
+            --card: #1b2434;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --border: #334155;
+            --accent: #60a5fa;
+            --accent-soft: #1e293b;
+            --done: #4ade80;
+            --done-soft: #14321f;
+            --warn: #fbbf24;
+            --warn-soft: #2a2110;
+            --code-bg: #111827;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 40px 20px 80px;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { max-width: 880px; margin: 0 auto; }
+
+    header {
+        margin-bottom: 26px;
+    }
+
+    h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        line-height: 1.2;
+        letter-spacing: -0.4px;
+    }
+
+    .lede {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+    }
+
+    .meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+
+    .chip {
+        padding: 4px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .chip.ok { border-color: var(--done); background: var(--done-soft); color: var(--done); }
+
+    .progress-card {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        margin: 22px 0 26px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(8px);
+    }
+
+    .progress-text {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+        flex: 1;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--code-bg);
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--done));
+        transition: width 220ms ease;
+    }
+
+    .reset {
+        padding: 5px 11px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .reset:hover { color: var(--text); border-color: var(--accent); }
+
+    section {
+        margin-bottom: 18px;
+        padding: 24px 26px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+    }
+
+    section > h2 {
+        margin: 0 0 4px;
+        font-size: 19px;
+        letter-spacing: -0.2px;
+    }
+
+    section > h2 .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        margin-right: 9px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+        vertical-align: 2px;
+    }
+
+    h3 {
+        margin: 22px 0 8px;
+        font-size: 15px;
+        color: var(--text);
+    }
+
+    p { margin: 10px 0; }
+    p:first-of-type { margin-top: 12px; }
+
+    ul, ol { margin: 10px 0; padding-left: 22px; }
+    li { margin: 5px 0; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+        overflow-wrap: anywhere;
+        padding: 1px 6px;
+        border-radius: 5px;
+        background: var(--code-bg);
+        font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 0.88em;
+    }
+
+    .code-block {
+        position: relative;
+        margin: 12px 0;
+    }
+
+    .code-block pre {
+        margin: 0;
+        padding: 14px 16px;
+        padding-right: 76px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--code-bg);
+        overflow-x: auto;
+    }
+
+    .code-block code {
+        padding: 0;
+        background: none;
+        font-size: 13px;
+        line-height: 1.7;
+        white-space: pre;
+    }
+
+    .copy {
+        position: absolute;
+        top: 9px;
+        right: 9px;
+        padding: 4px 10px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: var(--card);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: color 120ms ease, border-color 120ms ease;
+    }
+
+    .copy:hover { color: var(--accent); border-color: var(--accent); }
+    .copy.done { color: var(--done); border-color: var(--done); }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    th {
+        background: var(--code-bg);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--muted);
+    }
+
+    tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--code-bg) 45%, transparent); }
+
+    .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 12px 0;
+        border-radius: 4px;
+    }
+
+    .table-scroll table { margin: 0; }
+
+    .tick { color: var(--done); font-weight: 700; }
+    .dash { color: var(--muted); }
+
+    .checks { list-style: none; margin: 12px 0; padding: 0; }
+
+    .checks li {
+        margin: 0;
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        cursor: pointer;
+        transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    .checks li:hover { border-color: var(--accent); }
+
+    .checks input {
+        margin: 4px 0 0;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--done);
+        cursor: pointer;
+        flex: 0 0 auto;
+    }
+
+    .checks li:has(input:checked) {
+        background: var(--done-soft);
+        border-color: var(--done);
+    }
+
+    .checks li:has(input:checked) .label {
+        color: var(--muted);
+        text-decoration: line-through;
+        text-decoration-color: var(--done);
+    }
+
+    .label { flex: 1; }
+
+    .callout {
+        padding: 13px 16px;
+        border-left: 3px solid var(--accent);
+        border-radius: 9px;
+        background: var(--accent-soft);
+        font-size: 14px;
+    }
+
+    .callout.ok { border-left-color: var(--done); background: var(--done-soft); }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+
+    .callout strong { font-weight: 700; }
+
+    .steps { counter-reset: step; list-style: none; padding: 0; margin: 12px 0; }
+
+    .steps li {
+        counter-increment: step;
+        position: relative;
+        padding: 8px 0 8px 38px;
+        margin: 0;
+        border-bottom: 1px dashed var(--border);
+    }
+
+    .steps li:last-child { border-bottom: none; }
+
+    .steps li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 9px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .kv {
+        display: grid;
+        grid-template-columns: 190px 1fr;
+        gap: 1px;
+        margin: 12px 0;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 14px;
+    }
+
+    .kv > div { padding: 10px 13px; background: var(--card); }
+    .kv > div:nth-child(odd) { background: var(--code-bg); color: var(--muted); font-weight: 600; }
+
+    footer {
+        margin-top: 30px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    @media (max-width: 640px) {
+        body { padding: 22px 12px 60px; }
+        section { padding: 18px 16px; border-radius: 12px; }
+        h1 { font-size: 23px; }
+        .kv { grid-template-columns: 1fr; }
+        .kv > div:nth-child(odd) { padding-bottom: 2px; }
+        table { font-size: 13px; }
+        th, td { padding: 8px 9px; }
+    }
+
+    @media print {
+        body { background: #fff; padding: 0; }
+        .progress-card, .copy, .reset { display: none; }
+        section { box-shadow: none; border-color: #ccc; page-break-inside: avoid; }
+        a { color: inherit; text-decoration: underline; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <h1>Chrome Web Store submission checklist</h1>
+        <p class="lede">Everything needed to publish <strong>Username Generator 1.2.0</strong>.</p>
+        <div class="meta">
+            <span class="chip">v1.2.0</span>
+            <span class="chip">23 files · 51 KB</span>
+            <span class="chip ok">Privacy policy live</span>
+            <span class="chip">38 tests</span>
+        </div>
+    </header>
+
+    <div class="progress-card">
+        <span class="progress-text" id="progress-text">0 / 0</span>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <button class="reset" id="reset" type="button">Reset</button>
+    </div>
+
+    <!-- 1 -->
+    <section>
+        <h2><span class="num">1</span>Build the upload package</h2>
+        <div class="code-block">
+            <pre><code>npm test          # 38 tests must pass
+npm run package   # writes dist/username-generator-1.2.0.zip</code></pre>
+            <button class="copy" type="button">Copy</button>
+        </div>
+        <p>Expected: <strong>23 files, ~51 KB</strong>, no <code>test.html</code>, no <code>docs/</code>.</p>
+        <p>The script also verifies that every file referenced by <code>manifest.json</code>
+           (popup, icons) actually exists before zipping.</p>
+    </section>
+
+    <!-- 2 -->
+    <section>
+        <h2><span class="num">2</span>Assets</h2>
+        <div class="table-scroll"><table>
+            <thead>
+                <tr><th>Asset</th><th>Requirement</th><th>File</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Store icon</td><td>128×128 PNG</td>
+                    <td><a href="../chrome-extension/icon.png">chrome-extension/icon.png</a></td>
+                    <td class="tick">✅</td>
+                </tr>
+                <tr>
+                    <td>Screenshot 1</td><td>1280×800, 24-bit, no alpha</td>
+                    <td><a href="screenshots/01-light-en.png">screenshots/01-light-en.png</a></td>
+                    <td class="tick">✅</td>
+                </tr>
+                <tr>
+                    <td>Screenshot 2</td><td>1280×800</td>
+                    <td><a href="screenshots/02-dark-en.png">screenshots/02-dark-en.png</a></td>
+                    <td class="tick">✅</td>
+                </tr>
+                <tr>
+                    <td>Screenshot 3</td><td>1280×800</td>
+                    <td><a href="screenshots/03-batch.png">screenshots/03-batch.png</a></td>
+                    <td class="tick">✅</td>
+                </tr>
+                <tr>
+                    <td>Screenshot 4</td><td>1280×800</td>
+                    <td><a href="screenshots/04-zh-tw.png">screenshots/04-zh-tw.png</a></td>
+                    <td class="tick">✅</td>
+                </tr>
+                <tr>
+                    <td>Small promo tile</td><td>440×280</td>
+                    <td><a href="screenshots/promo-440x280.png">screenshots/promo-440x280.png</a></td>
+                    <td class="tick">✅</td>
+                </tr>
+                <tr>
+                    <td>Marquee promo</td><td>1400×560</td>
+                    <td>optional, not included</td>
+                    <td class="dash">—</td>
+                </tr>
+            </tbody>
+        </table></div>
+        <p>Screenshots are rendered from <a href="promo-tile.html">store/promo-tile.html</a> and the live page via
+           <code>python3 -m http.server</code> plus a headless browser. Re-render them if the UI changes.</p>
+    </section>
+
+    <!-- 3 -->
+    <section>
+        <h2><span class="num">3</span>Privacy policy hosting</h2>
+        <div class="callout ok">
+            <strong>Done.</strong> GitHub Pages is enabled (source: <code>master</code> branch, <code>/docs</code> folder)
+            and the page is live.
+        </div>
+        <div class="code-block">
+            <pre><code>https://1ifebytes.github.io/username-generator/privacy.html</code></pre>
+            <button class="copy" type="button">Copy</button>
+        </div>
+        <p>Verified: HTTP 200, renders in light and dark colour schemes.</p>
+        <p><code>docs/_config.yml</code> excludes internal notes and product docs, so only the privacy policy is
+           published — <code>_CONTEXT.md</code>, <code>PRD.md</code> and <code>iOS-App-Analysis.md</code> return 404.</p>
+        <p>Paste the URL above into the Store listing's <strong>Privacy policy</strong> field.</p>
+    </section>
+
+    <!-- 4 -->
+    <section>
+        <h2><span class="num">4</span>Store listing fields</h2>
+        <p>Copy from <code>store/listing-en.md</code> (or <code>store/listing-zh.md</code>).</p>
+        <div class="kv">
+            <div>Name</div><div>Username Generator — Fast &amp; Readable</div>
+            <div>Short description</div>
+            <div>Generate readable usernames in one click. Presets, history, favorites, 8 languages, dark mode. Works fully offline. <span class="dash">(115 chars)</span></div>
+            <div>Category</div><div>Productivity</div>
+            <div>Language</div><div>English</div>
+            <div>Single purpose</div><div>Generate random usernames and copy them to the clipboard.</div>
+        </div>
+    </section>
+
+    <!-- 5 -->
+    <section>
+        <h2><span class="num">5</span>Privacy practices tab</h2>
+        <div class="table-scroll"><table>
+            <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+            <tbody>
+                <tr><td>Does the extension collect user data?</td><td><strong>No</strong></td></tr>
+                <tr><td>Remote code</td><td><strong>No</strong></td></tr>
+                <tr><td>Uses <code>eval()</code></td><td><strong>No</strong></td></tr>
+                <tr><td>Sells data to third parties</td><td><strong>No</strong></td></tr>
+                <tr><td>Uses data for purposes unrelated to single purpose</td><td><strong>No</strong></td></tr>
+                <tr><td>Uses data to determine creditworthiness</td><td><strong>No</strong></td></tr>
+            </tbody>
+        </table></div>
+        <h3>Permission justification</h3>
+        <div class="code-block">
+            <pre><code>storage — Saves username history, favorites, and display preferences locally, and keeps
+favorites and preferences in sync across the user's own devices. No other permissions are
+requested.</code></pre>
+            <button class="copy" type="button">Copy</button>
+        </div>
+    </section>
+
+    <!-- 6 -->
+    <section>
+        <h2><span class="num">6</span>Verify before submitting</h2>
+        <ul class="checks" id="preflight">
+            <li><input type="checkbox" data-check="t1"><span class="label"><code>npm test</code> — 38/38 pass</span></li>
+            <li><input type="checkbox" data-check="t2"><span class="label"><code>npm run package</code> — zip builds, 23 files, manifest assets verified</span></li>
+            <li><input type="checkbox" data-check="t3"><span class="label">Load the <strong>zip</strong> (not the folder) into <code>chrome://extensions</code> and smoke test</span></li>
+            <li><input type="checkbox" data-check="t4"><span class="label">Toolbar icon opens the popup (not a new tab)</span></li>
+            <li><input type="checkbox" data-check="t5"><span class="label">Generate / Copy / Auto-copy work</span></li>
+            <li><input type="checkbox" data-check="t6"><span class="label"><em>More options &amp; history →</em> opens the full page</span></li>
+            <li><input type="checkbox" data-check="t7"><span class="label">History does <strong>not</strong> grow when dragging the length slider</span></li>
+            <li><input type="checkbox" data-check="t8"><span class="label">All 8 languages render (check 繁體中文 and Deutsch)</span></li>
+            <li><input type="checkbox" data-check="t9"><span class="label">Dark mode renders correctly in popup and full page</span></li>
+            <li><input type="checkbox" data-check="t10"><span class="label">JSON export produces a file; JSON import merges without duplicates</span></li>
+            <li><input type="checkbox" data-check="t11"><span class="label">Favorites survive a browser restart</span></li>
+            <li><input type="checkbox" data-check="t12"><span class="label">No console errors on either page</span></li>
+            <li><input type="checkbox" data-check="t13"><span class="label"><code>manifest.json</code> version matches <code>package.json</code> (1.2.0)</span></li>
+            <li><input type="checkbox" data-check="t14"><span class="label"><code>CHANGELOG.md</code> has a 1.2.0 entry</span></li>
+        </ul>
+    </section>
+
+    <!-- 7 -->
+    <section>
+        <h2><span class="num">7</span>Submission</h2>
+
+        <h3>First decide: new item, or update an existing one?</h3>
+        <p>Open <a href="https://chrome.google.com/webstore/devconsole" rel="noopener">chrome.google.com/webstore/devconsole</a>
+           and look at the item list.</p>
+        <div class="table-scroll"><table>
+            <thead><tr><th>What you see</th><th>What to do</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>The list is empty, or shows “Add new item”</td>
+                    <td><strong>First publication.</strong> Click <strong>Add new item</strong>, upload the zip, fill everything in.</td>
+                </tr>
+                <tr>
+                    <td>An existing <em>Username Generator</em> item with status Published / Unlisted</td>
+                    <td><strong>Update.</strong> Open that item → left sidebar <strong>Package</strong> →
+                        <strong>Upload new package</strong> → upload the zip. Do <strong>not</strong> create a second item.</td>
+                </tr>
+            </tbody>
+        </table></div>
+        <div class="callout warn">
+            The dashboard only accepts a package whose <code>manifest.json</code> version is <strong>higher</strong>
+            than the currently published one. Ours is <code>1.2.0</code>, so it works for both a first upload and an
+            update from <code>1.0.x</code> / <code>1.1.x</code>.
+        </div>
+
+        <h3>Steps (identical for both paths once the package is uploaded)</h3>
+        <ol class="steps">
+            <li><a href="https://chrome.google.com/webstore/devconsole" rel="noopener">chrome.google.com/webstore/devconsole</a></li>
+            <li><strong>Add new item</strong> (first release) <em>or</em> open the existing item → <strong>Package → Upload new package</strong> (update)</li>
+            <li>Upload <code>dist/username-generator-1.2.0.zip</code></li>
+            <li><strong>Store listing</strong> tab — paste from <code>store/listing-en.md</code>:
+                <ul>
+                    <li>Name, short description, detailed description, category, language</li>
+                    <li>Upload <code>screenshots/01-light-en.png</code> … <code>04-zh-tw.png</code> (order matters, 1–5 allowed)</li>
+                    <li>Upload <code>screenshots/promo-440x280.png</code> as the small promo tile</li>
+                    <li>Store icon: <code>chrome-extension/icon.png</code> (128×128)</li>
+                </ul>
+            </li>
+            <li><strong>Privacy practices</strong> tab:
+                <ul>
+                    <li>Single purpose: <code>Generate random usernames and copy them to the clipboard.</code></li>
+                    <li>Data usage: everything <strong>No</strong> (no collection, no remote code, no eval)</li>
+                    <li>Permission justification: the <code>storage</code> text from section 5</li>
+                    <li>Privacy policy URL: the GitHub Pages link from section 3</li>
+                </ul>
+            </li>
+            <li><strong>Distribution</strong> tab: Visibility <strong>Public</strong>, Regions <strong>All regions</strong></li>
+            <li><strong>Submit for review</strong></li>
+        </ol>
+        <p>Typical review time: a few hours to 3 business days. First review of a new extension usually takes longer
+           than updates.</p>
+
+        <h3>If review comes back with a request for changes</h3>
+        <ol class="steps">
+            <li>Fix the code, bump the version in <strong>both</strong> <code>manifest.json</code> and
+                <code>package.json</code> (e.g. <code>1.2.1</code>)</li>
+            <li><code>npm test &amp;&amp; npm run package</code></li>
+            <li>Upload the new zip to the <strong>same</strong> item</li>
+            <li><code>git tag v1.2.1 &amp;&amp; git push origin v1.2.1</code> (never move an existing tag)</li>
+            <li>Reply to the review message, then <strong>Submit for review</strong> again</li>
+        </ol>
+    </section>
+
+    <!-- 8 -->
+    <section>
+        <h2><span class="num">8</span>After approval</h2>
+        <ul class="checks">
+            <li><input type="checkbox" data-check="a1" checked><span class="label">Tag the release (<code>v1.2.0</code> already pushed)</span></li>
+            <li><input type="checkbox" data-check="a2"><span class="label">Add the Store link to <code>README.md</code></span></li>
+            <li><input type="checkbox" data-check="a3"><span class="label">Watch the GitHub issue tracker for feedback</span></li>
+        </ul>
+    </section>
+
+    <!-- risks -->
+    <section>
+        <h2><span class="num">!</span>Known review risks</h2>
+        <div class="table-scroll"><table>
+            <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+            <tbody>
+                <tr><td>“storage” permission looks broad</td><td>Justification explains history, favorites, sync</td></tr>
+                <tr><td>Name contains a hyphen and extra words</td><td>Within 45-char limit, no trademark issue, no keyword stuffing</td></tr>
+                <tr><td>Sync storage might be questioned</td><td>Listing states history stays local; only favorites/preferences sync</td></tr>
+                <tr><td>Screenshots show English + Chinese</td><td>Acceptable; demonstrates the localization claim</td></tr>
+            </tbody>
+        </table></div>
+    </section>
+
+    <footer>
+        Progress is stored in this browser via <code>localStorage</code>. Use <strong>Reset</strong> to clear it.
+    </footer>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var STORAGE_KEY = 'ug-checklist-v1';
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][data-check]'));
+    var text = document.getElementById('progress-text');
+    var fill = document.getElementById('progress-fill');
+
+    function readState() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function writeState(state) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+            /* file:// or private mode — progress simply will not persist */
+        }
+    }
+
+    function render() {
+        var done = boxes.filter(function (box) { return box.checked; }).length;
+        var total = boxes.length;
+        var percent = total ? Math.round((done / total) * 100) : 0;
+
+        text.textContent = done + ' / ' + total + '  (' + percent + '%)';
+        fill.style.width = percent + '%';
+    }
+
+    var state = readState();
+
+    boxes.forEach(function (box) {
+        var id = box.getAttribute('data-check');
+        // Explicitly unchecked in this session wins over the default checked state.
+        if (Object.prototype.hasOwnProperty.call(state, id)) {
+            box.checked = state[id];
+        }
+
+        box.addEventListener('change', function () {
+            var next = readState();
+            next[id] = box.checked;
+            writeState(next);
+            render();
+        });
+    });
+
+    document.getElementById('reset').addEventListener('click', function () {
+        // Store an explicit `false` for every id, otherwise a reload would fall
+        // back to the HTML default and silently re-check the pre-ticked items.
+        var cleared = {};
+        boxes.forEach(function (box) {
+            box.checked = false;
+            cleared[box.getAttribute('data-check')] = false;
+        });
+        writeState(cleared);
+        render();
+    });
+
+    // Copy buttons
+    Array.prototype.forEach.call(document.querySelectorAll('.code-block'), function (block) {
+        var button = block.querySelector('.copy');
+        var code = block.querySelector('code');
+        if (!button || !code) return;
+
+        button.addEventListener('click', function () {
+            var value = code.textContent;
+
+            var done = function () {
+                button.textContent = 'Copied';
+                button.classList.add('done');
+                setTimeout(function () {
+                    button.textContent = 'Copy';
+                    button.classList.remove('done');
+                }, 1400);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(value).then(done, function () {});
+            } else {
+                var area = document.createElement('textarea');
+                area.value = value;
+                document.body.appendChild(area);
+                area.select();
+                try { document.execCommand('copy'); done(); } catch (error) { /* ignore */ }
+                document.body.removeChild(area);
+            }
+        });
+    });
+
+    render();
+})();
+</script>
+</body>
+</html>
