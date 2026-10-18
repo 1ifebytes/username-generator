@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — Username Generator</title>
+    <style>
+        :root {
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --text: #1f2933;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --accent: #1f6feb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #111827;
+                --card: #1f2937;
+                --text: #f9fafb;
+                --muted: #9ca3af;
+                --border: #374151;
+                --accent: #60a5fa;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 48px 20px 72px;
+            background: var(--bg);
+            color: var(--text);
+            font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        }
+
+        main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            line-height: 1.25;
+        }
+
+        h2 {
+            margin: 34px 0 10px;
+            font-size: 18px;
+        }
+
+        p, li { color: var(--text); }
+
+        .updated {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        ul { padding-left: 22px; }
+
+        li { margin-bottom: 6px; }
+
+        a { color: var(--accent); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 15px;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th { background: var(--bg); }
+
+        .note {
+            padding: 14px 16px;
+            border-left: 3px solid var(--accent);
+            background: var(--bg);
+            border-radius: 8px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        hr {
+            margin: 32px 0 0;
+            border: none;
+            border-top: 1px solid var(--border);
+        }
+
+        footer {
+            margin-top: 20px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Privacy Policy — Username Generator</h1>
+    <p class="updated">Last updated: 18 October 2026</p>
+
+    <p class="note">
+        Short version: the extension does not collect, transmit, sell, or share any personal data.
+        Everything it stores stays inside your own browser profile.
+    </p>
+
+    <h2>1. What the extension does</h2>
+    <p>
+        Username Generator creates random usernames locally in your browser. It has a single
+        purpose: generating usernames and letting you copy them. There is no account, no sign-up,
+        and no server component.
+    </p>
+
+    <h2>2. Data the extension stores</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Where it is stored</th>
+                <th>Why</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Generated username history (up to 50 entries)</td>
+                <td>Local only — <code>chrome.storage.local</code></td>
+                <td>Shows your recent usernames so you can copy them again</td>
+            </tr>
+            <tr>
+                <td>Favorites</td>
+                <td><code>chrome.storage.local</code>, and <code>chrome.storage.sync</code> if you are signed in to Chrome</td>
+                <td>Keeps saved usernames consistent across your devices</td>
+            </tr>
+            <tr>
+                <td>Preferences (theme, language, popup settings)</td>
+                <td><code>chrome.storage.local</code>, and <code>chrome.storage.sync</code> if you are signed in to Chrome</td>
+                <td>Remembers how you like the extension to look and behave</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>3. What is never collected</h2>
+    <ul>
+        <li>No personal information (name, email, address, phone)</li>
+        <li>No browsing history, tabs, or page content</li>
+        <li>No keystrokes or clipboard contents read in the background</li>
+        <li>No analytics, telemetry, advertising identifiers, or crash reports</li>
+        <li>No accounts, logins, or identifiers tied to you</li>
+    </ul>
+
+    <h2>4. Network access</h2>
+    <p>
+        The extension makes no network requests. It does not contact any server, API, or
+        third-party service. It works fully offline.
+    </p>
+
+    <h2>5. Clipboard</h2>
+    <p>
+        The clipboard is written to only when you explicitly click Copy, click a username, or press
+        the copy shortcut. The extension never reads your clipboard.
+    </p>
+
+    <h2>6. Sync storage</h2>
+    <p>
+        If you are signed in to Google Chrome with sync enabled, Chrome itself may sync favorites
+        and preferences through your Google account. That transfer is handled by Chrome, is
+        encrypted in transit, and is covered by
+        <a href="https://policies.google.com/privacy" rel="noopener">Google's Privacy Policy</a>.
+        The developer never receives this data. Username history is never synced.
+    </p>
+
+    <h2>7. Export and import</h2>
+    <p>
+        JSON export creates a file on your device using your browser's download mechanism. Import
+        reads only the file you explicitly choose. No data leaves your machine during either
+        operation.
+    </p>
+
+    <h2>8. Permissions</h2>
+    <ul>
+        <li><strong>storage</strong> — required to save history, favorites, and preferences.</li>
+    </ul>
+    <p>
+        No host permissions, no <code>tabs</code>, no <code>activeTab</code>, no scripting permissions
+        are requested.
+    </p>
+
+    <h2>9. Data removal</h2>
+    <p>
+        Clear history inside the extension, remove individual favorites, or uninstall the
+        extension. Uninstalling removes all locally stored data. Synced data can be cleared from
+        your Chrome sync settings.
+    </p>
+
+    <h2>10. Children</h2>
+    <p>
+        The extension is not directed at children and does not knowingly collect data from anyone.
+    </p>
+
+    <h2>11. Changes</h2>
+    <p>
+        If this policy changes, the updated date above will change and the new version will appear
+        in this same location.
+    </p>
+
+    <h2>12. Contact</h2>
+    <p>
+        Questions or concerns:
+        <a href="https://github.com/1ifebytes/username-generator/issues" rel="noopener">
+            open an issue on GitHub
+        </a>.
+    </p>
+
+    <hr>
+    <footer>Username Generator is an open-source Chrome extension.</footer>
+</main>
+</body>
+</html>

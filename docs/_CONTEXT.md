@@ -27,11 +27,17 @@
 阶段 2 剩余项：
 - ✅ 场景预设、✅ 批量生成、✅ JSON 导入/导出、✅ `chrome.storage.sync` 同步
 
-下一步是阶段 3：Chrome Web Store 上架材料（商店图标、截图、描述、隐私政策页）与提审。
+阶段 3 剩余（需人工操作，代码侧已完成）：
+1. 开启 GitHub Pages（`master` 的 `/docs`）→ 拿到隐私政策 URL
+2. 用 `dist/username-generator-1.2.0.zip` 上传到 Chrome Web Store 开发者后台
+3. 按 `store/CHECKLIST.md` 填写商店信息与隐私声明
+4. 审核通过后打 tag `v1.2.0`
 
 仓库待清理：`feature/full-page-history`、`feature/ux-optimization` 已完全并入 `master`，可删除。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **打包只包含运行时文件**：`scripts/package.sh` 显式列文件，排除 `test.html` 与 docs；打包前用 Node 校验 manifest 引用的所有资源都存在。
+- **截图可复现**：截图通过 `python3 -m http.server` + 无头浏览器注入 `chrome.storage` mock 生成，seed 数据由 URL query 驱动，不依赖真实扩展环境。
 - **同步用适配器而不用改模块**：`modules/sync-store.js` 提供与 `chrome.storage.local` 同形的 `get/set/remove`，`popup.js` 与 `popup-quick.js` 只把 `storage` 换成 `SyncStore.createStorage()`，I18n/Theme/Favorites/quickSettings 无需改动。
 - **只同步白名单**：`usernameFavorites`、`themePreference`、`languagePreference`、`quickSettings`；`usernameHistory` 永不出本机，隐私叙事不破。
 - **收藏在读取时取并集**：两台设备各自的收藏取并集（同 username 取最新 timestamp，上限 100）。因为写入是整数组覆盖，删除也能正确同步。
@@ -70,6 +76,8 @@
 - **`#empty-history` 现在是 `.empty-state` div**，`renderHistory` 用 `display='flex'` 而不是 `'block'`；`#empty-favorites` 仍是 `<p>`（`block`）。改样式时不要混。
 - **模块是 `const` 全局词法绑定，不是 `window` 属性**：浏览器里 `FavoritesManager` 可用但 `window.FavoritesManager` 是 `undefined`。调试/自动化时直接写裸名。
 - **`SyncStore` 必须在 `popup.js` / `popup-quick.js` 之前加载**，否则会回退成直接用 `chrome.storage.local`（不报错，但不同步）。
+- **改 UI 后需重生成截图**：`store/screenshots/*.png` 是静态文件，不会自动更新；重新生成后检查是否仍为 1280×800 且无 alpha。
+- **`npm run package` 依赖 macOS 自带的 `zip`/`unzip`**；CI 上用 Ubuntu 也能跑（已安装 zip）。
 - **测同步时**：`tests/generator.test.js` 的 mock 只有 `storage.local`，没有 `sync`；同步专项用例自己用 `createAreaMock` 构造两个 area。
 - **`applyModeDefaults` 会覆盖四个勾选**：`applyNamedPreset` 必须在它之后再覆盖勾选，顺序不能反。
 - **`batch-grid:empty { display: none }`** 让批量区域在未生成时消失，不要在 JS 里再手动 toggle display。
@@ -78,6 +86,6 @@
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
 - **v1.2 已全部合入 `master`**（`7f4c5cf`），PR #1~#4 均为 merge commit，功能分支已删除。`develop` 已 fast-forward 到 `master`。
-- **阶段 2 全部完成**：JSON 导入/导出、`chrome.storage.sync` 跨设备同步（收藏 + 偏好；历史仅本地）。
+- **阶段 3 上架材料完成**：打包脚本、商店文案（EN/ZH）、隐私政策页、4 张 1280×800 截图、440×280 促销图、提审清单。等待人工上传到 Chrome Web Store 后台。
 - **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。
