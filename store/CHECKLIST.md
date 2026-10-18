@@ -103,22 +103,53 @@ requested.
 
 ## 7. Submission
 
-1. <https://chrome.google.com/webstore/devconsole> → **New item**
-2. Upload `dist/username-generator-1.2.0.zip`
-3. Fill **Store listing** from step 4, upload screenshots from step 2
-4. Fill **Privacy practices** from step 5, add the policy URL from step 3
-5. Set **Visibility**: Public
-6. Set **Distribution**: All regions
+### First decide: new item, or update an existing one?
+
+Open <https://chrome.google.com/webstore/devconsole> and look at the item list.
+
+| What you see | What to do |
+|---|---|
+| The list is empty, or shows "Add new item" | **First publication.** Click **Add new item**, upload the zip, fill everything in. |
+| An existing *Username Generator* item with status Published / Unlisted | **Update.** Open that item → left sidebar **Package** → **Upload new package** → upload the zip. Do **not** create a second item. |
+
+The dashboard only accepts a package whose `manifest.json` version is **higher**
+than the currently published one. Ours is `1.2.0`, so it works for both a first
+upload and an update from `1.0.x` / `1.1.x`.
+
+### Steps (identical for both paths once the package is uploaded)
+
+1. <https://chrome.google.com/webstore/devconsole>
+2. **Add new item** (first release) *or* open the existing item → **Package → Upload new package** (update)
+3. Upload `dist/username-generator-1.2.0.zip`
+4. **Store listing** tab — paste from `store/listing-en.md`:
+   - Name, short description, detailed description, category, language
+   - Upload `store/screenshots/01-light-en.png` … `04-zh-tw.png` (order matters, 1–5 allowed)
+   - Upload `store/screenshots/promo-440x280.png` as the small promo tile
+   - Store icon: `chrome-extension/icon.png` (128×128)
+5. **Privacy practices** tab:
+   - Single purpose: `Generate random usernames and copy them to the clipboard.`
+   - Data usage: everything **No** (no collection, no remote code, no eval)
+   - Permission justification: `storage — Saves username history, favorites, and display preferences locally, and keeps favorites and preferences in sync across the user's own devices. No other permissions are requested.`
+   - Privacy policy URL: the GitHub Pages link from step 3
+6. **Distribution** tab: Visibility **Public**, Regions **All regions**
 7. **Submit for review**
 
-Typical review time: a few hours to 3 business days. Initial review of a new
-extension often takes longer than updates.
+Typical review time: a few hours to 3 business days. First review of a new
+extension usually takes longer than updates.
+
+### If review comes back with a request for changes
+
+1. Fix the code, bump the version in **both** `manifest.json` and `package.json` (e.g. `1.2.1`)
+2. `npm test && npm run package`
+3. Upload the new zip to the **same** item
+4. `git tag v1.2.1 && git push origin v1.2.1` (never move an existing tag)
+5. Reply to the review message, then **Submit for review** again
 
 ---
 
 ## 8. After approval
 
-- [ ] Tag the release: `git tag -a v1.2.0 -m "Chrome Web Store 1.2.0" && git push origin v1.2.0`
+- [x] Tag the release (`v1.2.0` already pushed)
 - [ ] Add the Store link to `README.md`
 - [ ] Watch the GitHub issue tracker for feedback
 
