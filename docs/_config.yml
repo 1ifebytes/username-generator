@@ -1,0 +1,8 @@
+# GitHub Pages configuration.
+#
+# Only the privacy policy is meant to be served publicly from this folder.
+# Internal notes and product documents are excluded from the published site.
+exclude:
+  - _CONTEXT.md
+  - PRD.md
+  - iOS-App-Analysis.md
