@@ -25,14 +25,18 @@
 5. ~~窄屏响应式打磨（全页面 < 480px）。~~ ✅
 
 阶段 2 剩余项：
-1. `chrome.storage.sync` 跨设备同步收藏与设置
-2. 可用性提示（“去目标平台试一下是否被占用”）
+- ✅ 场景预设、✅ 批量生成、✅ JSON 导入/导出、✅ `chrome.storage.sync` 同步
 
-之后是阶段 3：Chrome Web Store 上架材料与隐私政策。
+下一步是阶段 3：Chrome Web Store 上架材料（商店图标、截图、描述、隐私政策页）与提审。
 
 仓库待清理：`feature/full-page-history`、`feature/ux-optimization` 已完全并入 `master`，可删除。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **同步用适配器而不用改模块**：`modules/sync-store.js` 提供与 `chrome.storage.local` 同形的 `get/set/remove`，`popup.js` 与 `popup-quick.js` 只把 `storage` 换成 `SyncStore.createStorage()`，I18n/Theme/Favorites/quickSettings 无需改动。
+- **只同步白名单**：`usernameFavorites`、`themePreference`、`languagePreference`、`quickSettings`；`usernameHistory` 永不出本机，隐私叙事不破。
+- **收藏在读取时取并集**：两台设备各自的收藏取并集（同 username 取最新 timestamp，上限 100）。因为写入是整数组覆盖，删除也能正确同步。
+- **同步失败不影响本地**：quota/网络错误只 `console.error`，`set` 仍先写 local 再写 sync。
+- **迁移不再清空收藏**：`migrateStorage` 改为读取现有值后再写，避免覆盖另一台设备同步来的收藏。
 - **堆叠 PR 必须用 merge commit 合并**：squash/rebase 会让子分支重新出现父分支的提交。合并顺序必须是栈底→栈顶，且每次合并后先把下一个 PR 的 base 手动改成 `master`，否则删掉 base 分支会让子 PR 被 GitHub 自动关闭。
 - **导入采用“并集 + 最新时间戳”**：按 username 去重，timestamp 新者胜，然后降序排序并截断到 50（`DataPortability.merge`）。不会覆盖本地数据。
 - **导出格式带 `app` 标识**：`{ app: 'username-generator', version: 2, exportedAt, history, favorites }`，解析时校验 app，防止误导入无关 JSON。
@@ -65,6 +69,8 @@
 - **新增语言时**：必须同时补 `translations[code]` 的全部 key、`LANGUAGE_NAMES[code]`、`getLocaleCode[code]`，否则测试会红（`hasTranslation` 校验全部 key）。
 - **`#empty-history` 现在是 `.empty-state` div**，`renderHistory` 用 `display='flex'` 而不是 `'block'`；`#empty-favorites` 仍是 `<p>`（`block`）。改样式时不要混。
 - **模块是 `const` 全局词法绑定，不是 `window` 属性**：浏览器里 `FavoritesManager` 可用但 `window.FavoritesManager` 是 `undefined`。调试/自动化时直接写裸名。
+- **`SyncStore` 必须在 `popup.js` / `popup-quick.js` 之前加载**，否则会回退成直接用 `chrome.storage.local`（不报错，但不同步）。
+- **测同步时**：`tests/generator.test.js` 的 mock 只有 `storage.local`，没有 `sync`；同步专项用例自己用 `createAreaMock` 构造两个 area。
 - **`applyModeDefaults` 会覆盖四个勾选**：`applyNamedPreset` 必须在它之后再覆盖勾选，顺序不能反。
 - **`batch-grid:empty { display: none }`** 让批量区域在未生成时消失，不要在 JS 里再手动 toggle display。
 - **复制按钮闪烁用 `textContent = '✓'`**，恢复时用 `I18nManager.t('button.copy')`，所以不要在恢复逻辑里写死英文。
@@ -72,6 +78,6 @@
 - **不要把语言 option 的 `textContent` 交给 `data-i18n`**：语言名必须是母语原生写法，由 `getLanguageName` 填充。
 - 本地未跟踪的 `.idea/`、`test-v11.html` 是作者个人文件，不要提交或删除。
 - **v1.2 已全部合入 `master`**（`7f4c5cf`），PR #1~#4 均为 merge commit，功能分支已删除。`develop` 已 fast-forward 到 `master`。
-- 阶段 0、阶段 1、阶段 2（预设/批量、JSON 导入导出）全部完成。
+- **阶段 2 全部完成**：JSON 导入/导出、`chrome.storage.sync` 跨设备同步（收藏 + 偏好；历史仅本地）。
 - **阶段 1 全部完成**：自动复制开关、复制按钮 ✓ 反馈、快捷键提示、空状态引导、a11y（历史行可键盘聚焦、info 图标可聚焦、去掉列表 aria-live）、窄屏响应式（≤480px）。
 - **工作流**：功能开发先 `git switch -c feature/<name> origin/master`，完成后 PR 合入 `master`/`develop`；不要直接提交到 `master`。注意 `origin/develop` 目前落后 `master` 7 个提交，合入前先同步。

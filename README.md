@@ -10,6 +10,8 @@ Full-page username generator (Manifest V3) for Chrome. Build pronounceable or re
 - Modes: Easy to say (consonant/vowel alternating), Easy to read (ambiguous chars removed), All characters
 - Toggles: uppercase, lowercase, numbers, symbols
 - History (local): up to 50 items in `chrome.storage.local`, timestamps (YYYY-MM-DD HH:mm:ss, local), lazy load, click-to-copy, delete single, clear all
+- Favorites (union-merged across devices) and preferences sync through `chrome.storage.sync`; history never leaves the device
+- JSON export/import for history and favorites
 - Quick toolbar popup for one-click generate/copy, plus a full page (`chrome-extension/page.html`) for history and favorites; non-blocking toast feedback
 - UI languages: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Français, Deutsch
 
@@ -39,6 +41,8 @@ MIT
 - 模式：易于发音（辅音/元音交替）、易于阅读（移除易混淆字符）、全部字符
 - 选项：可选大写/小写/数字/符号
 - 历史（本地）：`chrome.storage.local` 保存最多 50 条，时间戳 YYYY-MM-DD HH:mm:ss（本地时区），懒加载，点击复制，单条删除与清空
+- 收藏（多设备取并集）与偏好设置通过 `chrome.storage.sync` 同步；历史只留在本机
+- 历史与收藏支持 JSON 导入导出
 - 工具栏轻量弹窗一键生成/复制；全页面（`chrome-extension/page.html`）承载历史与收藏；非阻塞 toast 提示
 - 界面语言：English、简体中文、繁體中文、日本語、한국어、Español、Français、Deutsch
 
@@ -68,6 +72,8 @@ Chrome 全頁版用戶名產生器（MV3），快速生出易講或易讀嘅用�
 - 模式：易講（子音/母音交替）、易讀（移除易混字符）、全部字符
 - 選項：大細階、數字、符號任揀
 - 歷史（本地）：`chrome.storage.local` 最多 50 條，時間戳 YYYY-MM-DD HH:mm:ss（本地時區），懶加載，點擊可複製，支援刪單條/清空
+- 收藏（多裝置取並集）與偏好設定透過 `chrome.storage.sync` 同步；歷史只留在本機
+- 歷史與收藏支援 JSON 匯入匯出
 - 工具列輕量彈窗一鍵生成/複製；全頁面（`chrome-extension/page.html`）承載歷史同收藏；非阻塞 toast 提示
 - 介面語言：English、简体中文、繁體中文、日本語、한국어、Español、Français、Deutsch
 

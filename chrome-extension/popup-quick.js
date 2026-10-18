@@ -14,9 +14,9 @@
 
     let copyResetTimer = null;
 
-    const storage = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local)
-        ? chrome.storage.local
-        : null;
+    const storage = typeof SyncStore !== 'undefined'
+        ? SyncStore.createStorage()
+        : ((typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
 
     /**
      * Translate a key with a fallback for non-extension contexts.
