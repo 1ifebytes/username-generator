@@ -27,17 +27,20 @@
 阶段 2 剩余项：
 - ✅ 场景预设、✅ 批量生成、✅ JSON 导入/导出、✅ `chrome.storage.sync` 同步
 
-阶段 3 剩余（需人工操作，代码侧已完成）：
-1. 开启 GitHub Pages（`master` 的 `/docs`）→ 拿到隐私政策 URL
-2. 用 `dist/username-generator-1.2.0.zip` 上传到 Chrome Web Store 开发者后台
-3. 按 `store/CHECKLIST.md` 填写商店信息与隐私声明
-4. 审核通过后把商店链接写回 `README.md`
+阶段 3 进度：
+- ✅ GitHub Pages 已开启（`master` + `/docs`），隐私政策 URL 已上线：
+  `https://1ifebytes.github.io/username-generator/privacy.html`
+- ✅ `docs/_config.yml` 已排除内部文档，只有 `privacy.html` 对外（其余返回 404）
+- ⬜ 用 `dist/username-generator-1.2.0.zip` 上传到 Chrome Web Store 开发者后台
+- ⬜ 按 `store/CHECKLIST.md` 填写商店信息与隐私声明
+- ⬜ 审核通过后把商店链接写回 `README.md`
 
 若审核后需要改动，版本升为 `1.2.1`（manifest + package.json 同步）并新打 tag，不要移动 `v1.2.0`。
 
 仓库待清理：`feature/full-page-history`、`feature/ux-optimization` 已完全并入 `master`，可删除。最后是阶段 3：Chrome Web Store 上架材料与隐私政策。
 
 ## Technical Decisions
+- **Pages 源固定为 `master` + `/docs`**：`docs/_config.yml` 用 `exclude` 屏蔽 `_CONTEXT.md`/`PRD.md`/`iOS-App-Analysis.md`；新增文档时记得同步排除，否则会被公开。
 - **打包只包含运行时文件**：`scripts/package.sh` 显式列文件，排除 `test.html` 与 docs；打包前用 Node 校验 manifest 引用的所有资源都存在。
 - **截图可复现**：截图通过 `python3 -m http.server` + 无头浏览器注入 `chrome.storage` mock 生成，seed 数据由 URL query 驱动，不依赖真实扩展环境。
 - **同步用适配器而不用改模块**：`modules/sync-store.js` 提供与 `chrome.storage.local` 同形的 `get/set/remove`，`popup.js` 与 `popup-quick.js` 只把 `storage` 换成 `SyncStore.createStorage()`，I18n/Theme/Favorites/quickSettings 无需改动。

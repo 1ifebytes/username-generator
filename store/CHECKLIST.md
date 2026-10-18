@@ -35,15 +35,20 @@ Screenshots are rendered from `store/promo-tile.html` and the live page via
 
 ---
 
-## 3. Privacy policy hosting
+## 3. Privacy policy hosting — done ✅
 
-The Store requires a public URL. `docs/privacy.html` is ready to serve:
+GitHub Pages is enabled (source: `master` branch, `/docs` folder) and the page is live:
 
-1. Repository → **Settings → Pages**
-2. Source: **Deploy from a branch** → branch `master`, folder `/docs`
-3. Save, wait for the green check
-4. URL becomes: `https://1ifebytes.github.io/username-generator/privacy.html`
-5. Paste that URL into the Store listing's **Privacy policy** field
+```
+https://1ifebytes.github.io/username-generator/privacy.html
+```
+
+Verified: HTTP 200, renders in light and dark colour schemes.
+
+`docs/_config.yml` excludes internal notes and product docs, so only the privacy
+policy is published (`_CONTEXT.md`, `PRD.md`, `iOS-App-Analysis.md` return 404).
+
+Paste the URL above into the Store listing's **Privacy policy** field.
 
 ---
 
